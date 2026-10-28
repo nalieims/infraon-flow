@@ -1,0 +1,55 @@
+import uuid
+import zoneinfo
+
+from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.db.models.functions import Lower
+
+from .managers import UserManager
+
+# Database Design §6.1: "application default may be Asia/Kolkata".
+DEFAULT_USER_TIMEZONE = "Asia/Kolkata"
+
+
+def validate_timezone(value: str) -> None:
+    if value not in zoneinfo.available_timezones():
+        raise ValidationError(f"'{value}' is not a valid IANA time zone.")
+
+
+class User(AbstractUser):
+    """
+    Authentication identity (Database Design §6.1, table `users`).
+
+    Users sign in with email; there is no username. Workspace access is granted
+    only through WorkspaceMembership, never by this model alone.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    username = None
+    email = models.EmailField("email address", max_length=254, unique=True)
+    timezone = models.CharField(max_length=64, default=DEFAULT_USER_TIMEZONE, validators=[validate_timezone])
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
+
+    class Meta:
+        db_table = "users"
+        ordering = ["email"]
+        constraints = [
+            # Defense in depth: case-insensitive uniqueness even if a write bypasses normalisation.
+            models.UniqueConstraint(Lower("email"), name="users_email_ci_unique"),
+        ]
+
+    def __str__(self) -> str:
+        return self.email
+
+    def clean(self):
+        super().clean()
+        self.email = UserManager.normalize_email(self.email)
+
+    def save(self, *args, **kwargs):
+        self.email = UserManager.normalize_email(self.email)
+        super().save(*args, **kwargs)

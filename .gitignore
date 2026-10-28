@@ -1,0 +1,65 @@
+# ---------------------------------------------------------------
+# Secrets / environment (only *.example files are committed)
+# ---------------------------------------------------------------
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# ---------------------------------------------------------------
+# Node / Angular (frontend/.gitignore has Angular CLI specifics)
+# ---------------------------------------------------------------
+node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/coverage/
+frontend/out-tsc/
+npm-debug.log*
+yarn-error.log*
+
+# ---------------------------------------------------------------
+# Python / Django
+# ---------------------------------------------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+backend/staticfiles/
+backend/media/
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+
+# ---------------------------------------------------------------
+# IDEs / OS
+# ---------------------------------------------------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Office lock / temp files (docs are edited in Word)
+~$*
+
+# ---------------------------------------------------------------
+# Temporary / build
+# ---------------------------------------------------------------
+tmp/
+temp/
+*.tmp
+*.log
+build/
+dist/

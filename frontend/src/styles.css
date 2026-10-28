@@ -1,0 +1,18 @@
+/*
+ * Layer order: Tailwind theme/base, then PrimeNG component styles, then Tailwind utilities.
+ * PrimeNG is configured (app.config.ts) to emit its styles into the `primeng` layer so that
+ * Tailwind utility classes can override PrimeNG defaults without !important.
+ */
+@layer theme, base, primeng, components, utilities;
+
+@import 'tailwindcss';
+@import 'primeicons/primeicons.css';
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
