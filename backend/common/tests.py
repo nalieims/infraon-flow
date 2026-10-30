@@ -1,9 +1,12 @@
+import json
 import uuid
 
 from django.test import RequestFactory, SimpleTestCase
 from rest_framework.exceptions import ValidationError
 from rest_framework.test import APITestCase
 
+from .exceptions import api_exception_handler
+from .views import json_server_error
 from .workspace import get_requested_workspace_id
 
 
@@ -56,3 +59,15 @@ class WorkspaceHeaderTests(SimpleTestCase):
     def test_malformed_uuid_is_rejected(self):
         with self.assertRaises(ValidationError):
             get_requested_workspace_id(self.factory.get("/", HTTP_X_WORKSPACE_ID="not-a-uuid"))
+
+
+class UnhandledExceptionTests(SimpleTestCase):
+    def test_unexpected_errors_are_left_to_django(self):
+        self.assertIsNone(api_exception_handler(RuntimeError("boom"), {}))
+
+    def test_handler500_returns_error_envelope(self):
+        response = json_server_error(RequestFactory().get("/"))
+        self.assertEqual(response.status_code, 500)
+        error = json.loads(response.content)["error"]
+        self.assertEqual(error["code"], "internal_error")
+        self.assertEqual(error["message"], "An unexpected error occurred.")

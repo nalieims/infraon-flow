@@ -32,3 +32,8 @@ class UserManager(BaseUserManager):
         if extra_fields["is_superuser"] is not True:
             raise ValueError("Superuser must have is_superuser=True.")
         return self._create_user(email, password, **extra_fields)
+
+    def get_by_natural_key(self, username):
+        # Used by authentication (admin login, JWT login). Stored emails are always
+        # normalised, so normalising the input makes sign-in case-insensitive.
+        return self.get(**{self.model.USERNAME_FIELD: self.normalize_email(username)})

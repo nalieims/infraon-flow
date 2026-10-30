@@ -4,16 +4,11 @@ Standard API error contract (API Design §15.2, System Design §8.2):
     {"error": {"code": "...", "message": "...", "details": {...}, "request_id": "..."}}
 """
 
-import logging
-
 from rest_framework import status
 from rest_framework.exceptions import APIException, ValidationError
-from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
 from .middleware import get_request_id
-
-logger = logging.getLogger(__name__)
 
 ERROR_CODES_BY_STATUS = {
     400: "validation_error",
@@ -53,12 +48,10 @@ def api_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if response is None:
-        # Unhandled error: log with traceback, return a generic body (never leak internals).
-        logger.exception("Unhandled API exception")
-        return Response(
-            error_payload(500, "An unexpected error occurred."),
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        # Unexpected error: let Django handle it (DEBUG traceback page, `django.request`
+        # error log, error-reporting hooks). With DEBUG=False, handler500
+        # (common.views.json_server_error) still returns the standard JSON error envelope.
+        return None
 
     if isinstance(exc, ValidationError):
         detail = exc.detail if isinstance(exc.detail, dict) else {"non_field_errors": exc.detail}

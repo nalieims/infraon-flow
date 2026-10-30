@@ -1,5 +1,6 @@
 import uuid
 import zoneinfo
+from functools import cache
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
@@ -12,8 +13,14 @@ from .managers import UserManager
 DEFAULT_USER_TIMEZONE = "Asia/Kolkata"
 
 
+@cache
+def _valid_timezones() -> frozenset[str]:
+    # Scanning the tz database is slow; the set never changes while the process runs.
+    return frozenset(zoneinfo.available_timezones())
+
+
 def validate_timezone(value: str) -> None:
-    if value not in zoneinfo.available_timezones():
+    if value not in _valid_timezones():
         raise ValidationError(f"'{value}' is not a valid IANA time zone.")
 
 
@@ -45,10 +52,6 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return self.email
-
-    def clean(self):
-        super().clean()
-        self.email = UserManager.normalize_email(self.email)
 
     def save(self, *args, **kwargs):
         self.email = UserManager.normalize_email(self.email)

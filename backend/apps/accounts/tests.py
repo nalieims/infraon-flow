@@ -1,8 +1,9 @@
-from django.contrib.auth import get_user_model
-from django.db import IntegrityError
+from django.contrib.auth import authenticate, get_user_model
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 
-from .models import DEFAULT_USER_TIMEZONE
+from .models import DEFAULT_USER_TIMEZONE, validate_timezone
 
 User = get_user_model()
 
@@ -31,3 +32,22 @@ class UserModelTests(TestCase):
     def test_email_required(self):
         with self.assertRaises(ValueError):
             User.objects.create_user(email="", password="x")
+
+    def test_authenticate_is_case_insensitive(self):
+        User.objects.create_user(email="alex@example.com", password="Strong-password-value")
+        user = authenticate(email="  Alex@Example.COM ", password="Strong-password-value")
+        self.assertIsNotNone(user)
+        self.assertEqual(user.email, "alex@example.com")
+
+    def test_db_constraint_blocks_case_variant_written_directly(self):
+        User.objects.create_user(email="alex@example.com", password="x")
+        bob = User.objects.create_user(email="bob@example.com", password="x")
+        # .update() writes straight to the database, skipping save()/normalisation,
+        # so only the Lower(email) unique constraint can stop this.
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            User.objects.filter(pk=bob.pk).update(email="ALEX@EXAMPLE.COM")
+
+    def test_timezone_must_be_valid_iana_name(self):
+        validate_timezone("Asia/Kolkata")
+        with self.assertRaises(ValidationError):
+            validate_timezone("Mars/Olympus")

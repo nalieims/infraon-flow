@@ -21,3 +21,10 @@ SECURE_HSTS_PRELOAD = False
 
 # API documentation is restricted to staff outside development.
 SPECTACULAR_SETTINGS["SERVE_PERMISSIONS"] = ["rest_framework.permissions.IsAdminUser"]
+
+# Browsers send the Django admin session cookie, not a JWT, so the docs views also accept
+# session auth: staff sign in at /admin/ first, then open /api/docs/.
+SPECTACULAR_SETTINGS["SERVE_AUTHENTICATION"] = [
+    "rest_framework.authentication.SessionAuthentication",
+    "rest_framework_simplejwt.authentication.JWTAuthentication",
+]
