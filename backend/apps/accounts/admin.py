@@ -23,15 +23,16 @@ class UserAdmin(BaseUserAdmin):
     form = UserChangeAdminForm
 
     ordering = ("email",)
-    list_display = ("email", "first_name", "last_name", "is_active", "is_staff", "date_joined")
+    list_display = ("email", "full_name", "is_active", "is_staff", "date_joined")
     list_filter = ("is_active", "is_staff", "is_superuser")
-    search_fields = ("email", "first_name", "last_name")
-    readonly_fields = ("id", "date_joined", "last_login")
+    search_fields = ("email", "full_name")
+    readonly_fields = ("id", "date_joined", "last_login", "terms_accepted_at", "terms_version")
 
     fieldsets = (
         (None, {"fields": ("id", "email", "password")}),
-        ("Profile", {"fields": ("first_name", "last_name", "timezone")}),
+        ("Profile", {"fields": ("full_name", "timezone")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
+        ("Consent", {"fields": ("terms_accepted_at", "terms_version")}),
     )
     add_fieldsets = ((None, {"classes": ("wide",), "fields": ("email", "password1", "password2")}),)

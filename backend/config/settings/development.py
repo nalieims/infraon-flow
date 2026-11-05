@@ -12,3 +12,9 @@ REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
     "rest_framework.renderers.JSONRenderer",
     "rest_framework.renderers.BrowsableAPIRenderer",
 ]
+
+# Looser sign-up limit for local API testing (Postman). Staging/production keep the base value (10/hour).
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {**REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"], "auth_register": "100/hour"}
+
+# Local dev runs on plain http://localhost; Postman will not send a Secure cookie over http.
+AUTH_REFRESH_COOKIE_SECURE = env.bool("AUTH_REFRESH_COOKIE_SECURE", default=False)

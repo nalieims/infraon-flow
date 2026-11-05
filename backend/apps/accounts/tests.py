@@ -1,11 +1,15 @@
 from django.contrib.auth import authenticate, get_user_model
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from rest_framework.test import APITestCase
 
 from .models import DEFAULT_USER_TIMEZONE, validate_timezone
 
 User = get_user_model()
+
+REGISTER_URL = "/api/v1/auth/register/"
 
 
 class UserModelTests(TestCase):
@@ -51,3 +55,52 @@ class UserModelTests(TestCase):
         validate_timezone("Asia/Kolkata")
         with self.assertRaises(ValidationError):
             validate_timezone("Mars/Olympus")
+
+
+class RegisterApiTests(APITestCase):
+    def setUp(self):
+        cache.clear()  # reset throttle counters between tests
+        self.payload = {
+            "full_name": "  Alex    Morgan ",
+            "email": "Alex@Example.COM",
+            "password": "Strong-password-value",
+            "accept_terms": True,
+        }
+
+    def test_register_creates_user_and_records_consent(self):
+        res = self.client.post(REGISTER_URL, self.payload, format="json")
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.data["email"], "alex@example.com")
+        self.assertEqual(res.data["full_name"], "Alex Morgan")
+        self.assertNotIn("password", res.data)
+        user = User.objects.get(email="alex@example.com")
+        self.assertIsNotNone(user.terms_accepted_at)
+        self.assertEqual(user.terms_version, "1.0")
+        self.assertNotIn("infraon_refresh", res.cookies)  # register must not sign in
+
+    def test_terms_must_be_accepted(self):
+        self.payload["accept_terms"] = False
+        res = self.client.post(REGISTER_URL, self.payload, format="json")
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("accept_terms", res.data["error"]["details"])
+
+    def test_duplicate_email_case_insensitive(self):
+        User.objects.create_user(email="alex@example.com", password="x")
+        res = self.client.post(REGISTER_URL, self.payload, format="json")
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("email", res.data["error"]["details"])
+
+    def test_weak_password_rejected(self):
+        for pwd in ["short", "1234567890123", "alexmorgan123"]:
+            self.payload["password"] = pwd
+            res = self.client.post(REGISTER_URL, self.payload, format="json")
+            self.assertEqual(res.status_code, 400, pwd)
+            self.assertIn("password", res.data["error"]["details"])
+
+    def test_blank_full_name_rejected(self):
+        self.payload["full_name"] = "   "
+        res = self.client.post(REGISTER_URL, self.payload, format="json")
+        self.assertEqual(res.status_code, 400)
+
+   
+    def test_register_is_throttled(self): ...  # optional: post 3 times, expect 429 on the 3rd

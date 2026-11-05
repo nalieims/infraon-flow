@@ -113,11 +113,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "OPTIONS": {"user_attributes": ("email", "full_name")},
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+
+# Version of the Terms of Service shown at sign-up. Bump it whenever the terms text changes,
+# so each user's record shows exactly which version they accepted.
+TERMS_OF_SERVICE_VERSION = "1.0"
+
 
 # ---------------------------------------------------------------------------
 # Internationalisation — persist all timestamps in UTC
@@ -148,6 +157,13 @@ REST_FRAMEWORK = {
     "DATETIME_FORMAT": "iso-8601",
     # Decimal metric values are serialised as strings (API Design §5.2).
     "COERCE_DECIMAL_TO_STRING": True,
+    # Per-endpoint limits, used via `throttle_scope` on views (API Design §19).
+    # Counts live in the default cache (per process); move to a shared cache before multi-worker production.
+    "DEFAULT_THROTTLE_RATES": {
+        "auth_login": "5/min",
+        "auth_register": "10/hour",
+        "auth_password_change": "5/hour",
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -166,6 +182,15 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
 }
+
+
+# Refresh token is delivered only as an HttpOnly cookie scoped to the auth endpoints
+# (System Design §5.1, §9.1). SameSite=Strict + JSON-only request bodies + narrow CORS mitigate CSRF.
+AUTH_REFRESH_COOKIE_NAME = "infraon_refresh"
+AUTH_REFRESH_COOKIE_PATH = "/api/v1/auth/"
+AUTH_REFRESH_COOKIE_SAMESITE = "Strict"
+AUTH_REFRESH_COOKIE_SECURE = env.bool("AUTH_REFRESH_COOKIE_SECURE", default=True)
+
 
 # ---------------------------------------------------------------------------
 # CORS — only trusted frontend origins

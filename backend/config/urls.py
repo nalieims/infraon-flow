@@ -8,7 +8,9 @@ from common.views import HealthCheckView
 # Versioned API (API Design §4). Domain app routes are added here as each milestone lands.
 api_v1_patterns = [
     path("health/", HealthCheckView.as_view(), name="health"),
+    path("auth/", include("apps.accounts.api.urls")),
 ]
+
 
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),

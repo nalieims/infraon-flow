@@ -116,7 +116,7 @@ Access tokens should be short-lived (for example, 5–15 minutes; final value is
 | POST | `/auth/register/` | Register user | Public |
 | POST | `/auth/login/` | Login and issue tokens | Public |
 | POST | `/auth/refresh/` | Rotate/refresh access token | Refresh cookie/token |
-| POST | `/auth/logout/` | Revoke refresh session | Authenticated |
+| POST | `/auth/logout/` | Revoke refresh session | Refresh cookie (no access token needed) |
 | GET | `/auth/me/` | Current user profile | Required |
 | PATCH | `/auth/me/` | Update current profile/timezone | Required |
 | POST | `/auth/password/change/` | Change password | Required |
@@ -127,10 +127,10 @@ Access tokens should be short-lived (for example, 5–15 minutes; final value is
 
 ```json
 {
+  "full_name": "Alex Morgan",
   "email": "alex@example.com",
   "password": "Strong-password-value",
-  "first_name": "Alex",
-  "last_name": "Morgan"
+  "accept_terms": true
 }
 ```
 
@@ -140,12 +140,41 @@ Response `201 Created`:
 {
   "id": "6f05d3ec-b9df-4a35-ae95-5e67fb98d0c0",
   "email": "alex@example.com",
-  "first_name": "Alex",
-  "last_name": "Morgan"
+  "full_name": "Alex Morgan",
+  "timezone": "Asia/Kolkata"
 }
 ```
 
-The API may create a personal workspace during registration if that onboarding decision is adopted. Do not implicitly create a business workspace without an explicit user action.
+Rules:
+
+- `full_name` is a single required field (max 150 characters). Repeated whitespace is collapsed; the name is never split into first/last parts.
+- `email` is normalised to lowercase and must be unique case-insensitively. A duplicate returns `400` with `details.email`.
+- `password` must pass the password policy: minimum 10 characters, not a common password, not entirely numeric, and not too similar to the email or full name. Failures return `400` with `details.password` (a list of messages).
+- `accept_terms` must be `true`. The server records `terms_accepted_at` (UTC) and `terms_version` (from `TERMS_OF_SERVICE_VERSION`, currently `1.0`) as consent evidence. These fields are not returned by the API.
+- `timezone` is not accepted at registration; it defaults to `Asia/Kolkata` and can be changed later via `PATCH /auth/me/`.
+- Registration does **not** sign the user in and sets no cookie. The client calls `POST /auth/login/` next.
+- Rate limit: 10 requests per hour per client (`auth_register` scope); excess requests return `429`.
+
+Error example (`400 Bad Request`):
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "The request contains invalid fields.",
+    "details": {
+      "email": ["A user with this email address already exists."],
+      "accept_terms": ["You must accept the Terms of Service to create an account."]
+    },
+    "request_id": "<request-id>"
+  }
+}
+```
+
+Decisions (MVP):
+
+- **No workspace is created at registration.** Per the PRD onboarding workflow, the user explicitly creates a personal or organization workspace as the next step after signing in.
+- **Duplicate-email error is explicit.** This favours clear sign-up UX; abuse is limited by the registration rate limit. Revisit (generic response + email verification) when email delivery is introduced.
 
 #### Login
 
@@ -158,7 +187,7 @@ The API may create a personal workspace during registration if that onboarding d
 }
 ```
 
-Response `200 OK` (illustrative; refresh token may be set as cookie):
+Response `200 OK`:
 
 ```json
 {
@@ -166,11 +195,13 @@ Response `200 OK` (illustrative; refresh token may be set as cookie):
   "user": {
     "id": "6f05d3ec-b9df-4a35-ae95-5e67fb98d0c0",
     "email": "alex@example.com",
-    "first_name": "Alex",
-    "last_name": "Morgan"
+    "full_name": "Alex Morgan",
+    "timezone": "Asia/Kolkata"
   }
 }
 ```
+
+The refresh token is never returned in the body. It is set as an `HttpOnly`, `SameSite=Strict` cookie named `infraon_refresh`, scoped to path `/api/v1/auth/` (`Secure` in all environments except local http development). Email matching is case-insensitive. Rate limit: 5 requests per minute (`auth_login` scope).
 
 ## 7. Workspace and membership APIs
 
@@ -714,8 +745,8 @@ Use viewsets for standard CRUD where they remain clear; use explicit API views/a
 ## 24. Assumptions and decisions to confirm
 
 1. JWT library and exact access/refresh lifetimes.
-2. Whether refresh token is delivered only through HttpOnly cookie.
-3. Whether registration automatically creates a personal workspace.
+2. ~~Whether refresh token is delivered only through HttpOnly cookie.~~ **Decided:** yes, HttpOnly cookie only (see §6.2).
+3. ~~Whether registration automatically creates a personal workspace.~~ **Decided:** no; the user creates a workspace explicitly after sign-in (see §6.2).
 4. Exact Team Lead permissions and whether team-scoped objective access is required.
 5. Whether members can assign tasks to other workspace members.
 6. Whether objective/KR comments are included in MVP.
