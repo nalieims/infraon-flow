@@ -63,3 +63,4 @@ temp/
 *.log
 build/
 dist/
+.claude/

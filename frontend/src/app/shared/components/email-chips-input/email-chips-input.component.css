@@ -1,0 +1,6 @@
+/* The remove icon is 10px as designed; this pseudo-element widens the tap target to 24px. */
+.remove-chip::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}

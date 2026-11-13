@@ -1,0 +1,53 @@
+<div
+  class="flex min-h-11 w-full min-w-0 flex-wrap items-center gap-x-1 gap-y-1.5 rounded-lg border-[0.667px] bg-surface px-2 py-1.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/25 lg:min-h-10"
+  [class.border-line]="!error()"
+  [class.border-danger]="!!error()"
+>
+  @let list = emails();
+  @if (list.length) {
+    <ul class="contents" role="list" [attr.aria-label]="listLabel()">
+      @for (email of list; track email) {
+        <li
+          class="flex h-6 max-w-full min-w-0 items-center gap-1 rounded bg-brand-soft px-[7px] text-[11.5px] font-medium text-brand-strong-ink"
+        >
+          <span class="truncate">{{ email }}</span>
+          <button
+            type="button"
+            class="remove-chip relative grid size-2.5 shrink-0 place-items-center rounded-xs focus-visible:outline-2 focus-visible:outline-brand"
+            [attr.aria-label]="'Remove ' + email"
+            (click)="remove(email)"
+          >
+            <img
+              src="/icons/create-account/remove.svg"
+              alt=""
+              width="6"
+              height="6"
+              class="h-[6.25195px] w-[6.25195px]"
+            />
+          </button>
+        </li>
+      }
+    </ul>
+  }
+  <input
+    [id]="inputId()"
+    type="email"
+    inputmode="email"
+    autocomplete="off"
+    autocapitalize="off"
+    spellcheck="false"
+    [placeholder]="placeholder()"
+    [value]="draft()"
+    class="h-6 min-w-[160px] flex-1 bg-transparent text-base text-ink outline-none placeholder:text-placeholder lg:h-4 lg:text-[13px]"
+    [attr.aria-invalid]="error() ? 'true' : null"
+    [attr.aria-describedby]="error() ? errorId() : hint() ? hintId() : null"
+    (input)="onInput($event)"
+    (keydown)="onKeydown($event)"
+    (blur)="onBlur()"
+  />
+</div>
+@if (error(); as message) {
+  <app-field-error [errorId]="errorId()" alert>{{ message }}</app-field-error>
+} @else if (hint()) {
+  <p [id]="hintId()" class="text-[12px] text-ink-subtle">{{ hint() }}</p>
+}

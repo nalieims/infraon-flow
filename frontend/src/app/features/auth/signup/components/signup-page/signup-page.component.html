@@ -1,0 +1,726 @@
+<div
+  class="relative min-h-dvh bg-surface font-inter leading-[normal] text-ink antialiased lg:grid lg:grid-cols-[minmax(0,600fr)_minmax(0,840fr)]"
+>
+  <aside
+    class="hidden flex-col gap-10 overflow-hidden border-r-[0.667px] border-line-soft bg-surface-tint px-14 py-12 lg:flex"
+    aria-label="Sign-up overview"
+  >
+    <div class="aspect-[400/83] w-[250px] shrink-0" aria-hidden="true"></div>
+
+    <div class="flex flex-col gap-3.5">
+      <h2 class="max-w-[460px] text-[34px] leading-[39.1px] font-bold tracking-[-1.02px]">
+        {{ heading() }}
+      </h2>
+      <p class="max-w-[440px] text-[15px] leading-[23.25px] text-ink-muted">{{ subtitle() }}</p>
+    </div>
+
+    <ol class="flex flex-col" aria-label="Sign-up steps">
+      @let items = steps();
+      @for (item of items; track item.id) {
+        <li
+          class="flex items-start gap-3.5 pb-[22px] last:pb-0"
+          [attr.aria-current]="item.state === 'current' ? 'step' : null"
+        >
+          @switch (item.state) {
+            @case ('done') {
+              <span class="grid size-7 shrink-0 place-items-center rounded-md bg-success-soft">
+                <img
+                  src="/icons/create-account/step-done.svg"
+                  alt=""
+                  width="11"
+                  height="8"
+                  class="h-[7.92441px] w-[11.3775px]"
+                />
+              </span>
+            }
+            @case ('current') {
+              <span
+                class="grid size-7 shrink-0 place-items-center rounded-md bg-brand text-[12.5px] font-bold text-on-brand"
+                >{{ item.id }}</span
+              >
+            }
+            @default {
+              <span
+                class="grid size-7 shrink-0 place-items-center rounded-md border-[0.667px] border-line bg-surface text-[12.5px] font-bold text-ink-muted"
+                >{{ item.id }}</span
+              >
+            }
+          }
+          <span class="flex min-w-0 flex-col">
+            <span
+              class="text-[14px] font-semibold"
+              [class.text-ink-muted]="item.state === 'upcoming'"
+            >
+              @if (item.state === 'done') {
+                <span class="sr-only">Completed: </span>
+              }
+              {{ item.title }}
+            </span>
+            <span class="text-[12px] leading-[17.4px] break-words text-ink-subtle">{{
+              item.description
+            }}</span>
+          </span>
+        </li>
+      }
+    </ol>
+
+    @if (step() === 1) {
+      <ul class="flex max-w-[460px] flex-col gap-3.5" aria-label="What you get">
+        <li class="flex items-start gap-3">
+          <span class="grid size-6 shrink-0 place-items-center rounded-md bg-brand-soft">
+            <img src="/icons/create-account/okr.svg" alt="" width="12" height="12" />
+          </span>
+          <p class="min-w-0 max-w-[424px] flex-1 text-[13.5px] leading-[20.25px] text-ink-muted">
+            <strong class="font-bold text-ink">Objectives and key results</strong> that measure
+            outcomes, updated through check-ins.
+          </p>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="grid size-6 shrink-0 place-items-center rounded-md bg-brand-soft">
+            <img src="/icons/create-account/initiatives.svg" alt="" width="12" height="12" />
+          </span>
+          <p class="min-w-0 max-w-[424px] flex-1 text-[13.5px] leading-[20.25px] text-ink-muted">
+            <strong class="font-bold text-ink">Initiatives and tasks</strong> linked to the results
+            they move, or standing on their own.
+          </p>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="grid size-6 shrink-0 place-items-center rounded-md bg-brand-soft">
+            <img src="/icons/create-account/my-day.svg" alt="" width="12" height="12" />
+          </span>
+          <p class="min-w-0 flex-1 text-[13.5px] leading-[20.25px] text-ink-muted">
+            <strong class="font-bold text-ink">My Day</strong> to plan today without touching a
+            single due date.
+          </p>
+        </li>
+      </ul>
+    } @else {
+      <section
+        class="flex max-w-[460px] flex-col gap-3 rounded-xl border-[0.667px] border-line-soft bg-surface px-5 py-[18px] shadow-card"
+        aria-labelledby="signup-next-heading"
+      >
+        <h2 id="signup-next-heading" class="flex items-center gap-2">
+          <img src="/icons/create-account/sparkle.svg" alt="" width="13" height="13" />
+          <span class="text-[11.5px] font-semibold tracking-[0.69px] text-ink-subtle uppercase"
+            >What happens next</span
+          >
+        </h2>
+        <ul class="flex flex-col gap-3 text-[13px] leading-[19.5px] text-ink-muted">
+          <li class="flex items-start gap-2.5">
+            <img
+              src="/icons/create-account/clock.svg"
+              alt=""
+              width="13"
+              height="13"
+              class="mt-[3px] shrink-0"
+            />
+            <span class="min-w-0">{{ firstPeriod }} becomes your first OKR period.</span>
+          </li>
+          @if (isBusiness()) {
+            <li class="flex items-start gap-2.5">
+              <img
+                src="/icons/create-account/compass.svg"
+                alt=""
+                width="13"
+                height="13"
+                class="mt-[3px] shrink-0"
+              />
+              <span class="min-w-0"
+                >You land on the Dashboard with a sample objective you can edit or delete.</span
+              >
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="mt-[3px] grid size-[13px] shrink-0 place-items-center">
+                <img
+                  src="/icons/create-account/users.svg"
+                  alt=""
+                  width="13"
+                  height="10"
+                  class="h-[10.4px] w-[12.998px]"
+                />
+              </span>
+              <span class="min-w-0">Invited teammates get an email that expires in 7 days.</span>
+            </li>
+          } @else {
+            <li class="flex items-start gap-2.5">
+              <img
+                src="/icons/personal-workspace/my-day.svg"
+                alt=""
+                width="13"
+                height="13"
+                class="mt-[3px] shrink-0"
+              />
+              <span class="min-w-0">You land on My Day, ready to plan today.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="mt-[3px] grid size-[13px] shrink-0 place-items-center">
+                <img
+                  src="/icons/personal-workspace/lock.svg"
+                  alt=""
+                  width="11"
+                  height="13"
+                  class="h-[13px] w-[11.375px]"
+                />
+              </span>
+              <span class="min-w-0">No one else can see or join this workspace.</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <footer class="mt-auto flex flex-wrap gap-4 text-[12px]">
+      <p class="text-ink-subtle">© {{ year }} EverestIMS Technologies</p>
+      <a routerLink="/privacy" class="text-brand-ink hover:underline focus-visible:underline"
+        >Privacy</a
+      >
+      <a routerLink="/terms" class="text-brand-ink hover:underline focus-visible:underline"
+        >Terms</a
+      >
+      <a routerLink="/help" class="text-brand-ink hover:underline focus-visible:underline">Help</a>
+    </footer>
+  </aside>
+
+  <main
+    class="flex min-h-dvh min-w-0 flex-col bg-surface px-6 pt-8 pb-7 lg:items-center lg:justify-center"
+    [class]="mainClass()"
+  >
+    <div
+      class="mx-auto flex w-full flex-1 flex-col gap-[22px] lg:flex-none"
+      [style.max-width.px]="contentWidth()"
+    >
+      <div class="flex items-center gap-2.5 lg:absolute lg:top-12 lg:left-14">
+        <img
+          src="images/infraon-logo.svg"
+          alt=""
+          class="block h-auto w-[200px] shrink-0 lg:w-[250px]"
+        />
+        <p
+          class="border-l-[0.667px] border-line pl-2.5 text-[20px] leading-5 font-bold tracking-[-0.34px] lg:text-[28px] lg:leading-[22px] lg:tracking-[-0.38px]"
+        >
+          <span class="sr-only">Infraon </span>Flow
+        </p>
+      </div>
+
+      @if (step() === 1) {
+        <div class="flex flex-col gap-2.5 pt-2 lg:gap-2 lg:pt-0">
+          <div class="grid grid-cols-2 gap-1.5 lg:hidden" role="img" aria-label="Step 1 of 2">
+            <span class="h-1 rounded-xs bg-brand"></span>
+            <span class="h-1 rounded-xs bg-track"></span>
+          </div>
+          <p class="text-[10.5px] font-bold tracking-[0.63px] text-brand-ink uppercase">
+            Step 1 of 2 · Account
+          </p>
+          <h1
+            class="text-2xl leading-[28.8px] font-semibold tracking-[-0.48px] lg:text-[26px] lg:leading-[31.2px] lg:tracking-[-0.52px]"
+          >
+            Create your account
+          </h1>
+          <p class="text-[14px] leading-[21px] text-ink-muted">
+            Use your work email so teammates can find you.
+          </p>
+        </div>
+
+        <form
+          class="flex flex-col gap-4"
+          [formGroup]="accountForm"
+          (ngSubmit)="submitAccount()"
+          novalidate
+        >
+          <div class="flex flex-col gap-1.5">
+            <label [for]="ids.fullName" class="text-[12px] font-medium text-ink-muted">
+              Full name<span class="text-danger" aria-hidden="true"> *</span>
+            </label>
+            <input
+              [id]="ids.fullName"
+              type="text"
+              formControlName="fullName"
+              autocomplete="name"
+              autocapitalize="words"
+              required
+              class="field-input"
+              [class.border-line]="!errors().fullName"
+              [class.border-danger]="!!errors().fullName"
+              [attr.aria-invalid]="errors().fullName ? 'true' : null"
+              [attr.aria-describedby]="errors().fullName ? 'signup-full-name-error' : null"
+            />
+            @if (errors().fullName; as message) {
+              <app-field-error errorId="signup-full-name-error">{{ message }}</app-field-error>
+            }
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label [for]="ids.email" class="text-[12px] font-medium text-ink-muted">
+              Work email<span class="text-danger" aria-hidden="true"> *</span>
+            </label>
+            <input
+              [id]="ids.email"
+              type="email"
+              inputmode="email"
+              formControlName="email"
+              autocomplete="email"
+              autocapitalize="off"
+              spellcheck="false"
+              required
+              class="field-input"
+              [class.border-line]="!errors().email"
+              [class.border-danger]="!!errors().email"
+              [attr.aria-invalid]="errors().email ? 'true' : null"
+              [attr.aria-describedby]="errors().email ? 'signup-email-error' : 'signup-email-hint'"
+            />
+            @if (errors().email; as message) {
+              <app-field-error errorId="signup-email-error">{{ message }}</app-field-error>
+            } @else {
+              <p id="signup-email-hint" class="text-[12px] text-ink-subtle">
+                We'll send a 6-digit code to confirm it.
+              </p>
+            }
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label [for]="ids.password" class="text-[12px] font-medium text-ink-muted">
+              Password<span class="text-danger" aria-hidden="true"> *</span>
+            </label>
+            <div class="relative">
+              <input
+                [id]="ids.password"
+                [type]="passwordVisible() ? 'text' : 'password'"
+                formControlName="password"
+                autocomplete="new-password"
+                autocapitalize="off"
+                spellcheck="false"
+                required
+                class="field-input pr-11 lg:pr-10"
+                [class.border-line]="!errors().password"
+                [class.border-danger]="!!errors().password"
+                [attr.aria-invalid]="errors().password || passwordPolicyInvalid() ? 'true' : null"
+                [attr.aria-describedby]="
+                  errors().password ? 'signup-password-error' : 'signup-password-hint'
+                "
+              />
+              <button
+                type="button"
+                class="absolute top-1.5 right-1.5 grid size-8 cursor-pointer place-items-center rounded-lg border-[0.667px] border-transparent text-ink-muted hover:bg-track focus-visible:outline-2 focus-visible:outline-brand lg:size-7"
+                [attr.aria-label]="passwordVisible() ? 'Hide password' : 'Show password'"
+                [attr.aria-pressed]="passwordVisible()"
+                [attr.aria-controls]="ids.password"
+                (click)="togglePassword()"
+              >
+                <img
+                  src="/icons/create-account/eye-mobile.svg"
+                  alt=""
+                  width="16"
+                  height="12"
+                  class="h-[12.4444px] w-[16.0014px] lg:hidden"
+                />
+                <img
+                  src="/icons/create-account/eye.svg"
+                  alt=""
+                  width="14"
+                  height="11"
+                  class="hidden h-[10.8889px] w-[14.0012px] lg:block"
+                />
+              </button>
+            </div>
+            <div class="pt-0.5">
+              <div class="grid grid-cols-4 gap-1" role="img" [attr.aria-label]="strengthAria()">
+                @for (segment of [1, 2, 3, 4]; track segment) {
+                  <span
+                    class="h-1 rounded-xs"
+                    [class.bg-track]="segment > strength().filled"
+                    [class.bg-warn]="segment <= strength().filled && strength().tone === 'warn'"
+                    [class.bg-success]="
+                      segment <= strength().filled && strength().tone === 'success'
+                    "
+                  ></span>
+                }
+              </div>
+            </div>
+            @if (errors().password; as message) {
+              <app-field-error errorId="signup-password-error">{{ message }}</app-field-error>
+            } @else {
+              <p id="signup-password-hint" class="text-[12px] text-ink-subtle" aria-live="polite">
+                @let level = strength();
+                @if (level.label) {
+                  <span
+                    class="font-bold"
+                    [class.text-warn-ink]="level.tone === 'warn'"
+                    [class.text-success-ink]="level.tone === 'success'"
+                    >{{ level.label }}</span
+                  >
+                }
+                {{ strengthRule() }}
+              </p>
+            }
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex items-start gap-2">
+              <span class="relative mt-px flex size-[18px] shrink-0 lg:size-4">
+                <input
+                  [id]="ids.terms"
+                  type="checkbox"
+                  formControlName="terms"
+                  class="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-xs border border-control-border bg-surface checked:border-brand checked:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                  [attr.aria-invalid]="errors().terms ? 'true' : null"
+                  [attr.aria-describedby]="errors().terms ? 'signup-terms-error' : null"
+                />
+                <img
+                  src="/icons/create-account/checkbox-check-mobile.svg"
+                  alt=""
+                  width="15"
+                  height="15"
+                  class="pointer-events-none relative m-auto hidden peer-checked:block lg:peer-checked:hidden"
+                />
+                <img
+                  src="/icons/create-account/checkbox-check.svg"
+                  alt=""
+                  width="14"
+                  height="14"
+                  class="pointer-events-none relative m-auto hidden lg:peer-checked:block"
+                />
+              </span>
+              <label
+                [for]="ids.terms"
+                class="min-w-0 text-[13.5px] leading-[19.575px] text-ink-muted lg:text-[13px] lg:leading-[18.85px]"
+              >
+                I agree to the
+                <a
+                  routerLink="/terms"
+                  class="text-brand-ink hover:underline focus-visible:underline"
+                  >Terms of Service</a
+                >
+                and
+                <a
+                  routerLink="/privacy"
+                  class="text-brand-ink hover:underline focus-visible:underline"
+                  >Privacy Policy</a
+                >.
+              </label>
+            </div>
+            @if (errors().terms; as message) {
+              <app-field-error errorId="signup-terms-error">{{ message }}</app-field-error>
+            }
+          </div>
+
+          <button
+            type="submit"
+            class="flex h-12 w-full cursor-pointer items-center justify-center rounded-lg border-[0.667px] border-brand bg-brand px-3.5 text-[15px] font-medium tracking-[-0.075px] text-on-brand shadow-button transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:h-[42px] lg:text-[14px] lg:tracking-[-0.07px]"
+          >
+            Create account
+          </button>
+        </form>
+
+        <p class="mt-auto text-center text-[14px] text-ink-muted lg:mt-0 lg:text-[13px]">
+          Already have an account?
+          <a
+            routerLink="/login"
+            class="font-semibold text-brand-ink hover:underline focus-visible:underline"
+            >Sign in</a
+          >
+        </p>
+      } @else {
+        <div class="flex flex-col gap-2.5 pt-2 lg:gap-2 lg:pt-0">
+          <div class="grid grid-cols-2 gap-1.5 lg:hidden" role="img" aria-label="Step 2 of 2">
+            <span class="h-1 rounded-xs bg-brand"></span>
+            <span class="h-1 rounded-xs bg-brand"></span>
+          </div>
+          <p class="text-[10.5px] font-bold tracking-[0.63px] text-brand-ink uppercase">
+            Step 2 of 2 · Workspace
+          </p>
+          <h1
+            class="text-2xl leading-[28.8px] font-semibold tracking-[-0.48px] lg:text-[26px] lg:leading-[31.2px] lg:tracking-[-0.52px]"
+          >
+            Set up your workspace
+          </h1>
+        </div>
+
+        <form
+          class="flex flex-col gap-[18px]"
+          [formGroup]="workspaceForm"
+          (ngSubmit)="submitWorkspace()"
+          novalidate
+        >
+          <fieldset class="flex min-w-0 flex-col gap-2">
+            <legend class="pb-2 text-[12px] font-medium text-ink-muted">Workspace type</legend>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label
+                class="flex cursor-pointer gap-3 rounded-xl border-[0.667px] border-line bg-surface px-4 py-3.5 has-checked:bg-surface-tint has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand"
+              >
+                <span class="relative mt-[3.5px] flex size-[13px] shrink-0">
+                  <input
+                    type="radio"
+                    value="business"
+                    formControlName="workspaceType"
+                    class="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-full border border-control-border bg-surface outline-none checked:border-brand-ink"
+                  />
+                  <span
+                    class="icon-mask icon-radio-dot size-2 text-brand-ink pointer-events-none relative m-auto hidden peer-checked:block"
+                    aria-hidden="true"
+                  ></span>
+                </span>
+                <span class="flex min-w-0 flex-col gap-1">
+                  <span class="flex items-center gap-1.5">
+                    <span class="grid size-3.5 shrink-0 place-items-center">
+                      <img
+                        src="/icons/create-account/business.svg"
+                        alt=""
+                        width="11"
+                        height="14"
+                        class="h-3.5 w-[10.5px]"
+                      />
+                    </span>
+                    <span class="text-[14px] font-semibold text-ink">Business</span>
+                  </span>
+                  <span class="text-[12.5px] leading-[18.125px] text-ink-muted"
+                    >For teams: shared OKRs, initiatives, teams and roles.</span
+                  >
+                </span>
+              </label>
+              <label
+                class="flex cursor-pointer gap-3 rounded-xl border-[0.667px] border-line bg-surface px-4 py-3.5 has-checked:bg-violet-soft has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand"
+              >
+                <span class="relative mt-[3.5px] flex size-[13px] shrink-0">
+                  <input
+                    type="radio"
+                    value="personal"
+                    formControlName="workspaceType"
+                    class="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-full border border-control-border bg-surface outline-none checked:border-brand-ink"
+                  />
+                  <span
+                    class="icon-mask icon-radio-dot size-2 text-brand-ink pointer-events-none relative m-auto hidden peer-checked:block"
+                    aria-hidden="true"
+                  ></span>
+                </span>
+                <span class="flex min-w-0 flex-col gap-1">
+                  <span class="flex items-center gap-1.5">
+                    <span class="grid size-3.5 shrink-0 place-items-center">
+                      <img
+                        src="/icons/create-account/personal.svg"
+                        alt=""
+                        width="12"
+                        height="14"
+                        class="h-3.5 w-[12.25px]"
+                      />
+                    </span>
+                    <span class="text-[14px] font-semibold text-ink">Personal</span>
+                  </span>
+                  <span class="text-[12.5px] leading-[18.125px] text-ink-muted"
+                    >Just you: private goals, tasks and My Day.</span
+                  >
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="flex flex-col gap-1.5">
+            <label for="signup-workspace-name" class="text-[12px] font-medium text-ink-muted">
+              Workspace name<span class="text-danger" aria-hidden="true"> *</span>
+            </label>
+            <input
+              id="signup-workspace-name"
+              type="text"
+              formControlName="name"
+              autocomplete="organization"
+              required
+              class="field-input"
+              [class.border-line]="!nameError()"
+              [class.border-danger]="!!nameError()"
+              [attr.aria-invalid]="nameError() ? 'true' : null"
+              [attr.aria-describedby]="
+                nameError() ? 'signup-workspace-name-error' : 'signup-workspace-name-hint'
+              "
+            />
+            @if (nameError(); as message) {
+              <app-field-error errorId="signup-workspace-name-error">{{ message }}</app-field-error>
+            } @else {
+              <p id="signup-workspace-name-hint" class="text-[12px] text-ink-subtle">
+                @if (isBusiness()) {
+                  Shown to teammates in the workspace switcher.
+                } @else {
+                  Only you see this name, in the workspace switcher.
+                }
+              </p>
+            }
+          </div>
+
+          @if (isBusiness()) {
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div class="flex min-w-0 flex-col gap-1.5">
+                <label for="signup-role" class="text-[12px] font-medium text-ink-muted"
+                  >Your role</label
+                >
+                <p-select
+                  inputId="signup-role"
+                  formControlName="role"
+                  [options]="roleOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select your role"
+                  [pt]="{
+                    root: {
+                      class:
+                        'h-11 w-full items-center gap-2 rounded-lg border-[0.667px] border-line bg-surface px-3 shadow-none lg:h-10',
+                    },
+                    label: {
+                      class:
+                        'flex items-center p-0 text-base leading-[18.85px] text-ink lg:text-[13px]',
+                    },
+                    dropdown: { class: 'w-3 text-ink-subtle' },
+                  }"
+                >
+                  <ng-template #dropdownicon>
+                    <span class="grid size-3 place-items-center">
+                      <img
+                        src="/icons/create-account/chevron-down.svg"
+                        alt=""
+                        width="10"
+                        height="6"
+                        class="h-[5.62734px] w-[10.1241px]"
+                      />
+                    </span>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <fieldset class="flex min-w-0 flex-col gap-1.5">
+                <legend class="pb-1.5 text-[12px] font-medium text-ink-muted">Team size</legend>
+                <div
+                  class="flex h-11 items-center gap-0.5 rounded-lg border-[0.667px] border-line bg-surface p-0.5 lg:h-10"
+                >
+                  @for (size of teamSizes; track size.value) {
+                    <label
+                      class="flex h-7 flex-1 cursor-pointer items-center justify-center rounded-md px-3 text-[12.5px] font-medium whitespace-nowrap text-ink-muted has-checked:bg-brand-soft has-checked:text-brand-strong-ink has-focus-visible:outline-2 has-focus-visible:outline-brand sm:flex-none"
+                    >
+                      <input
+                        type="radio"
+                        class="sr-only"
+                        formControlName="teamSize"
+                        [value]="size.value"
+                      />
+                      {{ size.label }}
+                    </label>
+                  }
+                </div>
+              </fieldset>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label for="signup-invites" class="text-[12px] font-medium text-ink-muted">
+                Invite teammates <span class="font-normal text-ink-subtle">(optional)</span>
+              </label>
+              <app-email-chips-input
+                inputId="signup-invites"
+                listLabel="Teammates to invite"
+                hint="They join as Members. You can change roles in Teams."
+                [(emails)]="invites"
+              />
+            </div>
+          } @else {
+            <fieldset class="flex min-w-0 flex-col gap-2" aria-describedby="signup-focus-hint">
+              <legend class="pb-2 text-[12px] font-medium text-ink-muted">
+                What do you want to focus on first?
+                <span class="font-normal text-ink-subtle">(optional)</span>
+              </legend>
+              <div class="flex flex-wrap gap-x-[7.5px] gap-y-2">
+                @let chips = focusChips();
+                @for (chip of chips; track chip.value) {
+                  <button
+                    type="button"
+                    class="flex h-11 cursor-pointer items-center rounded-full border-[0.667px] px-3 text-[12.5px] font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:h-[30px]"
+                    [class.border-brand]="chip.selected"
+                    [class.bg-brand]="chip.selected"
+                    [class.text-on-brand]="chip.selected"
+                    [class.border-line]="!chip.selected"
+                    [class.bg-surface]="!chip.selected"
+                    [class.text-ink-muted]="!chip.selected"
+                    [attr.aria-pressed]="chip.selected"
+                    (click)="toggleFocus(chip.value)"
+                  >
+                    {{ chip.label }}
+                  </button>
+                }
+              </div>
+              <p id="signup-focus-hint" class="text-[12px] text-ink-subtle">
+                We'll suggest a sample objective for each one you pick. You can edit or delete them.
+              </p>
+            </fieldset>
+
+            <div class="flex items-start gap-2 lg:items-center">
+              <span class="relative mt-px flex size-[18px] shrink-0 lg:mt-0 lg:size-4">
+                <input
+                  id="signup-weekly-reminder"
+                  type="checkbox"
+                  formControlName="weeklyReminder"
+                  class="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-xs border border-control-border bg-surface checked:border-brand checked:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                />
+                <img
+                  src="/icons/create-account/checkbox-check.svg"
+                  alt=""
+                  width="14"
+                  height="14"
+                  class="pointer-events-none relative m-auto hidden peer-checked:block"
+                />
+              </span>
+              <label
+                for="signup-weekly-reminder"
+                class="min-w-0 cursor-pointer text-[13px] text-ink-muted"
+                >Send me a weekly check-in reminder on Friday</label
+              >
+            </div>
+
+            <div
+              class="flex items-center gap-2.5 rounded-lg border-[0.667px] border-brand-soft bg-surface-tint px-3.5 py-2.5"
+            >
+              <img
+                src="/icons/personal-workspace/info.svg"
+                alt=""
+                width="14"
+                height="14"
+                class="shrink-0"
+              />
+              <p class="min-w-0 text-[12.5px] text-ink-muted">
+                Personal workspaces don't have
+                <strong class="font-semibold text-ink">teams, roles or invites</strong>. Need them
+                later? Create a business workspace from the workspace switcher.
+              </p>
+            </div>
+          }
+
+          <div class="flex items-center gap-2.5 pt-1.5">
+            <button
+              type="button"
+              class="flex h-12 cursor-pointer items-center justify-center gap-1.5 rounded-lg border-[0.667px] border-transparent px-3.5 text-[13px] font-medium tracking-[-0.065px] text-ink hover:bg-track focus-visible:outline-2 focus-visible:outline-brand lg:h-[42px]"
+              (click)="goToStep(1)"
+            >
+              <span class="grid size-[15px] place-items-center">
+                <span
+                  class="icon-mask icon-arrow-left h-[11.2493px] w-[13.125px]"
+                  aria-hidden="true"
+                ></span>
+              </span>
+              Back
+            </button>
+            <div class="flex min-w-0 flex-1 justify-end">
+              <button
+                type="submit"
+                class="flex h-12 cursor-pointer items-center justify-center gap-1.5 rounded-lg border-[0.667px] border-brand bg-brand px-[22px] text-[14px] font-medium tracking-[-0.07px] whitespace-nowrap text-on-brand shadow-button transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:h-[42px]"
+              >
+                Create workspace
+                <span class="grid size-[15px] place-items-center">
+                  <img
+                    src="/icons/create-account/arrow-right.svg"
+                    alt=""
+                    width="13"
+                    height="11"
+                    class="h-[11.2493px] w-[13.125px]"
+                  />
+                </span>
+              </button>
+            </div>
+          </div>
+        </form>
+      }
+    </div>
+  </main>
+</div>

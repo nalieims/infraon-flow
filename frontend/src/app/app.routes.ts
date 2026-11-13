@@ -7,7 +7,13 @@ import { MainLayout } from './layout/main-layout/main-layout';
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
 
-  // Unauthenticated pages: /login, /register
+  // Sign-up has its own full-screen two-column layout; both steps live on /register
+  {
+    path: 'register',
+    loadChildren: () => import('./features/auth/signup/signup.routes').then((m) => m.SIGNUP_ROUTES),
+  },
+
+  // Unauthenticated pages: /login
   {
     path: '',
     component: AuthLayout,
