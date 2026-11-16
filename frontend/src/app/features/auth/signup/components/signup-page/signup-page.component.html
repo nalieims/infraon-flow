@@ -311,14 +311,7 @@
                   alt=""
                   width="16"
                   height="12"
-                  class="h-[12.4444px] w-[16.0014px] lg:hidden"
-                />
-                <img
-                  src="/icons/create-account/eye.svg"
-                  alt=""
-                  width="14"
-                  height="11"
-                  class="hidden h-[10.8889px] w-[14.0012px] lg:block"
+                  class="h-[12.4444px] w-[16.0014px] lg:h-[10.8889px] lg:w-[14.0012px]"
                 />
               </button>
             </div>
@@ -361,28 +354,14 @@
                   [id]="ids.terms"
                   type="checkbox"
                   formControlName="terms"
-                  class="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-xs border border-control-border bg-surface checked:border-brand checked:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                  class="checkbox-tick absolute inset-0 size-full cursor-pointer appearance-none rounded-xs border border-control-border bg-surface checked:border-brand checked:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand [--u:1.0714px] lg:[--u:1px]"
                   [attr.aria-invalid]="errors().terms ? 'true' : null"
                   [attr.aria-describedby]="errors().terms ? 'signup-terms-error' : null"
-                />
-                <img
-                  src="/icons/create-account/checkbox-check-mobile.svg"
-                  alt=""
-                  width="15"
-                  height="15"
-                  class="pointer-events-none relative m-auto hidden peer-checked:block lg:peer-checked:hidden"
-                />
-                <img
-                  src="/icons/create-account/checkbox-check.svg"
-                  alt=""
-                  width="14"
-                  height="14"
-                  class="pointer-events-none relative m-auto hidden lg:peer-checked:block"
                 />
               </span>
               <label
                 [for]="ids.terms"
-                class="min-w-0 text-[13.5px] leading-[19.575px] text-ink-muted lg:text-[13px] lg:leading-[18.85px]"
+                class="min-w-0 cursor-pointer text-[13.5px] leading-[19.575px] text-ink-muted lg:text-[13px] lg:leading-[18.85px]"
               >
                 I agree to the
                 <a
@@ -652,14 +631,7 @@
                   id="signup-weekly-reminder"
                   type="checkbox"
                   formControlName="weeklyReminder"
-                  class="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-xs border border-control-border bg-surface checked:border-brand checked:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                />
-                <img
-                  src="/icons/create-account/checkbox-check.svg"
-                  alt=""
-                  width="14"
-                  height="14"
-                  class="pointer-events-none relative m-auto hidden peer-checked:block"
+                  class="checkbox-tick absolute inset-0 size-full cursor-pointer appearance-none rounded-xs border border-control-border bg-surface checked:border-brand checked:bg-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 />
               </span>
               <label

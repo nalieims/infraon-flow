@@ -5,15 +5,27 @@
  */
 @layer theme, base, primeng, components, utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'primeicons/primeicons.css';
+
+/*
+ * Inter, self-hosted: one variable file covering weights 100-900 (fvar wght axis 100..900).
+ * The three other copies in public/fonts are byte-identical, so only this one is declared.
+ */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-400.woff2.woff2') format('woff2');
+}
 
 /*
  * Semantic tokens taken from the Figma sign-up screens (Nalin-Practice, nodes 1311:93, 1342:10,
  * 1312:427, 1408:370). Light values are exact Figma values; `.app-dark` values are derived.
  */
 @theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   --color-brand: #4f46e5;
@@ -75,6 +87,46 @@
   /* Text input from the sign-up designs: 44px / 16px on phones, 40px / 13px from lg. */
   .field-input {
     @apply h-11 w-full min-w-0 rounded-lg border-[0.667px] bg-surface px-3 py-2 text-base leading-[21.75px] text-ink outline-none placeholder:text-placeholder focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/25 lg:h-10 lg:text-[13px] lg:leading-[18.85px];
+  }
+
+  /*
+   * Checkmark for a native checkbox (appearance-none), drawn as two rounded bars that replicate the
+   * Figma tick (14px viewBox, 1.75 stroke, round caps). --u is the px per viewBox unit, so the
+   * tick scales with the box (set --u:1.0714px for the 15px tick used in the 18px mobile box).
+   */
+  .checkbox-tick {
+    --u: 1px;
+  }
+
+  .checkbox-tick::before,
+  .checkbox-tick::after {
+    content: '';
+    display: none;
+    position: absolute;
+    height: calc(var(--u) * 1.75);
+    border-radius: 9999px;
+    background: white;
+    pointer-events: none;
+    transform-origin: calc(var(--u) * 0.875) 50%;
+  }
+
+  .checkbox-tick:checked::before,
+  .checkbox-tick:checked::after {
+    display: block;
+  }
+
+  .checkbox-tick::before {
+    width: calc(var(--u) * 6.081);
+    left: calc(50% - var(--u) * 5.25);
+    top: calc(50% - var(--u) * 0.4375);
+    transform: rotate(45deg);
+  }
+
+  .checkbox-tick::after {
+    width: calc(var(--u) * 10.7695);
+    left: calc(50% - var(--u) * 2.1875);
+    top: calc(50% + var(--u) * 2.625);
+    transform: rotate(-50.91deg);
   }
 
   /*
