@@ -1,11 +1,21 @@
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { NEVER, Subject, of, throwError } from 'rxjs';
 
+import { RegisterResponse } from '../../models/register.model';
+import { SignupService } from '../../services/signup.service';
 import { SignupPageComponent, quarterLabel } from './signup-page.component';
 
 describe('SignupPageComponent', () => {
+  const spyOnRegister = () => vi.spyOn(TestBed.inject(SignupService), 'register');
+  const spyOnNavigate = () => vi.spyOn(TestBed.inject(Router), 'navigate');
+
   let fixture: ComponentFixture<SignupPageComponent>;
   let el: HTMLElement;
+  let register: ReturnType<typeof spyOnRegister>;
+  let navigate: ReturnType<typeof spyOnNavigate>;
 
   const input = (id: string) => el.querySelector<HTMLInputElement>(`#${id}`)!;
   const type = (id: string, value: string) => {
@@ -26,11 +36,15 @@ describe('SignupPageComponent', () => {
     input('signup-terms').click();
     fixture.detectChanges();
   };
-  const goToStep2 = async () => {
-    fillValid();
-    submit();
+  // A successful register goes to the login page, so step 2 is opened directly in these tests.
+  const openStep2 = async () => {
+    (fixture.componentInstance as unknown as { goToStep(step: 1 | 2): void }).goToStep(2);
     await fixture.whenStable();
     fixture.detectChanges();
+  };
+  const goToStep2 = async () => {
+    fillValid();
+    await openStep2();
   };
   const button = (label: string) =>
     Array.from(el.querySelectorAll<HTMLButtonElement>('button')).find((b) =>
@@ -40,8 +54,11 @@ describe('SignupPageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SignupPageComponent],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
+    // No test reaches a real server: register never answers unless a test says otherwise.
+    register = spyOnRegister().mockReturnValue(NEVER);
+    navigate = spyOnNavigate().mockResolvedValue(true);
     fixture = TestBed.createComponent(SignupPageComponent);
     el = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
@@ -79,7 +96,7 @@ describe('SignupPageComponent', () => {
       expect(el.querySelectorAll('h1')).toHaveLength(1);
       expect(el.querySelector('h1')?.textContent).toContain('Create your account');
       expect(el.textContent).toContain('Step 1 of 2 · Account');
-      expect(el.textContent).toContain("We'll send a 6-digit code to confirm it.");
+      expect(el.textContent).not.toContain('6-digit code');
     });
 
     it('sets input types and autocomplete', () => {
@@ -128,7 +145,7 @@ describe('SignupPageComponent', () => {
       );
     });
 
-    it.each(['Asha Reddy', 'Mary-Jane', "O'Connor", 'Mary Jane O’Neil-Smith'])(
+    it.each(['Asha Reddy', 'Mary-Jane', "O'Connor", 'Mary Jane O’Neil-Smith', 'Asha 2', 'José'])(
       'accepts the name %s',
       (name) => {
         type('signup-full-name', name);
@@ -137,26 +154,37 @@ describe('SignupPageComponent', () => {
       },
     );
 
-    it.each(['Asha123', '12345', 'Asha@', 'Asha#Reddy', 'A$B', '100%', '-- --', "'"])(
-      'rejects the name %s with the letters-only error and stays on step 1',
+    it.each(['12345', '123 456'])(
+      'rejects the name %s as only numbers and stays on step 1',
       (name) => {
         fillValid();
         type('signup-full-name', name);
         submit();
         expect(el.querySelector('#signup-full-name-error')?.textContent).toContain(
-          'Use letters only. Spaces, hyphens and apostrophes are allowed.',
+          'Your name can’t be only numbers.',
         );
         expect(input('signup-full-name').getAttribute('aria-describedby')).toBe(
           'signup-full-name-error',
         );
         expect(el.querySelector('h1')?.textContent).toContain('Create your account');
         expect(document.activeElement).toBe(input('signup-full-name'));
+        expect(register).not.toHaveBeenCalled();
       },
     );
 
+    it('allows 150 characters in the name and rejects 151', () => {
+      type('signup-full-name', 'a'.repeat(150));
+      expect(el.querySelector('#signup-full-name-error')).toBeNull();
+
+      type('signup-full-name', 'a'.repeat(151));
+      expect(el.querySelector('#signup-full-name-error')?.textContent).toContain(
+        'Use 150 characters or fewer.',
+      );
+    });
+
     it('rejects a pasted invalid name and clears the error once fixed', () => {
       const field = input('signup-full-name');
-      field.value = 'Asha123';
+      field.value = '12345';
       field.dispatchEvent(new Event('paste'));
       field.dispatchEvent(new Event('input'));
       field.dispatchEvent(new Event('blur'));
@@ -169,14 +197,14 @@ describe('SignupPageComponent', () => {
 
     it('updates the strength meter as the password changes', () => {
       type('signup-password', 'abc');
-      expect(el.querySelector('#signup-password-hint')?.textContent).toContain(
-        'Weak. Use at least 12 characters with a number and a symbol.',
+      expect(el.querySelector('#signup-password-error')?.textContent).toContain(
+        'Use at least 10 characters.',
       );
       expect(input('signup-password').getAttribute('aria-invalid')).toBe('true');
 
       type('signup-password', 'abcdefghij1!');
       expect(el.querySelector('#signup-password-hint')?.textContent).toContain(
-        'Strong. At least 12 characters with a number and a symbol.',
+        'Strong. At least 10 characters with a number and a symbol.',
       );
       expect(
         el
@@ -186,13 +214,31 @@ describe('SignupPageComponent', () => {
     });
 
     it.each([
-      ['abcdefghi1!', 'Fair.', 'true'],
-      ['abcdefghij1!', 'Strong.', null],
-      ['Abcdefghij1!', 'Very strong.', null],
-    ])('rates %s as %s (11 vs 12 character boundary)', (password, label, invalid) => {
-      type('signup-password', password);
-      expect(el.querySelector('#signup-password-hint')?.textContent).toContain(label);
-      expect(input('signup-password').getAttribute('aria-invalid')).toBe(invalid);
+      ['abcdefghij', 'Weak.', null],
+      ['abcdefghij1', 'Fair.', null],
+      ['abcdefgh1!', 'Strong.', null],
+      ['Abcdefgh1!', 'Very strong.', null],
+    ])(
+      'rates %s as %s (10 characters is enough; number and symbol only raise the rating)',
+      (password, label, invalid) => {
+        type('signup-password', password);
+        expect(el.querySelector('#signup-password-hint')?.textContent).toContain(label);
+        expect(input('signup-password').getAttribute('aria-invalid')).toBe(invalid);
+      },
+    );
+
+    it('shows the minimum-length error under 10 characters and accepts 10 without a number or symbol', () => {
+      type('signup-password', 'abcdefghi');
+      expect(el.querySelector('#signup-password-error')?.textContent).toContain(
+        'Use at least 10 characters.',
+      );
+      expect(input('signup-password').getAttribute('aria-describedby')).toBe(
+        'signup-password-error',
+      );
+
+      type('signup-password', 'abcdefghij');
+      expect(el.querySelector('#signup-password-error')).toBeNull();
+      expect(input('signup-password').getAttribute('aria-invalid')).toBeNull();
     });
 
     it('toggles password visibility with an accessible name', () => {
@@ -208,9 +254,155 @@ describe('SignupPageComponent', () => {
     });
   });
 
+  describe('register API', () => {
+    const user: RegisterResponse = {
+      id: '6f05d3ec-b9df-4a35-ae95-5e67fb98d0c0',
+      email: 'priya.raman@infraonlabs.com',
+      full_name: 'Priya Raman',
+      timezone: 'Asia/Kolkata',
+    };
+    const failWith = (status: number, body: unknown = null) =>
+      throwError(() => new HttpErrorResponse({ status, error: body }));
+    const invalid = (details: Record<string, unknown>) =>
+      failWith(400, {
+        error: {
+          code: 'validation_error',
+          message: 'The request contains invalid fields.',
+          details,
+          request_id: null,
+        },
+      });
+    const submitButton = () => el.querySelector<HTMLButtonElement>('form button[type="submit"]')!;
+    const formError = () => el.querySelector('#signup-form-error')?.textContent?.trim();
+
+    it('sends trimmed name and email, an untouched password and a boolean accept_terms', () => {
+      type('signup-full-name', '  Priya Raman  ');
+      type('signup-email', ' priya.raman@infraonlabs.com ');
+      type('signup-password', ' abcdefghij1! ');
+      input('signup-terms').click();
+      submit();
+
+      expect(register).toHaveBeenCalledTimes(1);
+      expect(register).toHaveBeenCalledWith({
+        full_name: 'Priya Raman',
+        email: 'priya.raman@infraonlabs.com',
+        password: ' abcdefghij1! ',
+        accept_terms: true,
+      });
+    });
+
+    it('does not call the API while the form is invalid', () => {
+      submit();
+      expect(register).not.toHaveBeenCalled();
+    });
+
+    it('goes to the dashboard after a 201', () => {
+      register.mockReturnValue(of(user));
+      fillValid();
+      submit();
+
+      expect(navigate).toHaveBeenCalledWith(['/dashboard']);
+    });
+
+    it('shows each 400 field message under its field, focuses the first, and clears it on edit', () => {
+      register.mockReturnValue(
+        invalid({
+          email: ['A user with this email address already exists.'],
+          password: ['This password is too common.'],
+        }),
+      );
+      fillValid();
+      submit();
+
+      expect(el.querySelector('#signup-email-error')?.textContent).toContain(
+        'A user with this email address already exists.',
+      );
+      expect(el.querySelector('#signup-password-error')?.textContent).toContain(
+        'This password is too common.',
+      );
+      expect(input('signup-email').getAttribute('aria-describedby')).toBe('signup-email-error');
+      expect(document.activeElement).toBe(input('signup-email'));
+      expect(navigate).not.toHaveBeenCalled();
+
+      type('signup-email', 'other.person@infraonlabs.com');
+      expect(el.querySelector('#signup-email-error')).toBeNull();
+      expect(el.querySelector('#signup-password-error')).not.toBeNull();
+    });
+
+    it.each([
+      ['This field is required.', 'Enter your full name.'],
+      ['This field may not be blank.', 'Enter your full name.'],
+      ['Ensure this field has no more than 150 characters.', 'Use 150 characters or fewer.'],
+      ['Some other server rule.', 'Some other server rule.'],
+    ])('shows the full name server message "%s" as "%s"', (serverMessage, shown) => {
+      register.mockReturnValue(invalid({ full_name: [serverMessage] }));
+      fillValid();
+      submit();
+
+      expect(el.querySelector('#signup-full-name-error')?.textContent).toContain(shown);
+      expect(document.activeElement).toBe(input('signup-full-name'));
+    });
+
+    it('shows a terms error from the server under the terms checkbox', () => {
+      register.mockReturnValue(
+        invalid({ accept_terms: ['You must accept the Terms of Service to create an account.'] }),
+      );
+      fillValid();
+      submit();
+
+      expect(el.querySelector('#signup-terms-error')?.textContent).toContain(
+        'You must accept the Terms of Service to create an account.',
+      );
+    });
+
+    it('shows errors that belong to no field above the form, with a fallback message', () => {
+      register.mockReturnValue(invalid({ non_field_errors: ['Something is off.'] }));
+      fillValid();
+      submit();
+      expect(formError()).toBe('Something is off.');
+
+      register.mockReturnValue(invalid({}));
+      submit();
+      expect(formError()).toBe('The request contains invalid fields.');
+    });
+
+    it.each([
+      [429, 'Too many registration attempts. Please try again later.'],
+      [0, 'Unable to connect. Please check your internet connection and try again.'],
+      [500, 'Something went wrong. Please try again later.'],
+      [503, 'Something went wrong. Please try again later.'],
+    ])('shows the message for HTTP status %i', (status, message) => {
+      register.mockReturnValue(failWith(status));
+      fillValid();
+      submit();
+
+      expect(formError()).toBe(message);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('disables the button while the request runs and ignores a second submit', () => {
+      const pending = new Subject<RegisterResponse>();
+      register.mockReturnValue(pending);
+      fillValid();
+      expect(submitButton().textContent?.trim()).toBe('Create account');
+
+      submit();
+      expect(submitButton().disabled).toBe(true);
+      expect(submitButton().textContent?.trim()).toBe('Creating account...');
+
+      submit();
+      expect(register).toHaveBeenCalledTimes(1);
+
+      pending.error(new HttpErrorResponse({ status: 500 }));
+      fixture.detectChanges();
+      expect(submitButton().disabled).toBe(false);
+      expect(submitButton().textContent?.trim()).toBe('Create account');
+      expect(formError()).toBe('Something went wrong. Please try again later.');
+    });
+  });
+
   describe('step switching', () => {
-    it('moves to step 2 in place when step 1 is valid, without navigating', async () => {
-      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    it('opens step 2 in place, without navigating', async () => {
       await goToStep2();
 
       expect(el.querySelector('h1')?.textContent).toContain('Set up your workspace');
@@ -260,9 +452,7 @@ describe('SignupPageComponent', () => {
       expect(input('signup-terms').checked).toBe(true);
       expect(document.activeElement).toBe(input('signup-full-name'));
 
-      submit();
-      await fixture.whenStable();
-      fixture.detectChanges();
+      await openStep2();
       expect(input('signup-workspace-name').value).toBe('Infraon Labs');
       expect(el.querySelector<HTMLInputElement>('input[value="personal"]')!.checked).toBe(true);
     });
@@ -355,7 +545,6 @@ describe('SignupPageComponent', () => {
     });
 
     it('accepts a valid name and stays on step 2 without navigating', () => {
-      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       type('signup-workspace-name', 'Infraon Labs');
       submit();
       expect(el.querySelector('#signup-workspace-name-error')).toBeNull();

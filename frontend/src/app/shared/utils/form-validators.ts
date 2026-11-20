@@ -8,12 +8,10 @@ export const notBlankValidator: ValidatorFn = (
   return value.length > 0 && !value.trim() ? { required: true } : null;
 };
 
-const PERSON_NAME = /^[A-Za-z]+(?:[ '’-]+[A-Za-z]+)*$/;
-
-/** Letters A-Z with spaces, hyphens and apostrophes between them. Empty and blank values are left to `required`. */
-export const personNameValidator: ValidatorFn = (
+/** Rejects values made only of digits (and spaces). Empty values are left to `required`. */
+export const notOnlyNumbersValidator: ValidatorFn = (
   control: AbstractControl<string | null>,
 ): ValidationErrors | null => {
   const value = (control.value ?? '').trim();
-  return value && !PERSON_NAME.test(value) ? { personName: true } : null;
+  return value && /^[\d\s]+$/.test(value) ? { onlyNumbers: true } : null;
 };

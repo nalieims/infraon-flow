@@ -4,5 +4,5 @@ import { AppEnvironment } from './environment.model';
 export const environment: AppEnvironment = {
   production: false,
   appEnv: 'development',
-  apiBaseUrl: 'http://localhost:8000/api/v1',
+  apiBaseUrl: 'http://10.0.4.202:8082/api/v1',
 };

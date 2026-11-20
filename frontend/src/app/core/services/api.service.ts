@@ -4,35 +4,47 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 
-type QueryParams = Record<string, string | number | boolean | readonly (string | number | boolean)[]>;
+/** Query string values a GET request can send. */
+export type QueryParams = Record<string, string | number | boolean | readonly (string | number | boolean)[]>;
 
 /**
- * Thin typed wrapper around HttpClient for the versioned Infraon Flow API.
- * Feature services build on this instead of hard-coding the API base URL.
- * Paths are relative to the API root and keep Django's trailing slash, e.g. `tasks/`.
+ * Base class for every API service. Each module's service extends it and calls
+ * `this.get`, `this.post`, … with a path relative to the API root that keeps Django's
+ * trailing slash, for example `tags/`. Interceptors add the auth token, request id and
+ * workspace header, so services never add them.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private readonly http = inject(HttpClient);
+  protected readonly http = inject(HttpClient);
 
-  get<T>(path: string, params?: QueryParams): Observable<T> {
-    return this.http.get<T>(this.url(path), { params: params ? new HttpParams({ fromObject: params }) : undefined });
+  /** GET `urlSuffix` with optional query params. */
+  protected get<T>(urlSuffix: string, params: QueryParams = {}): Observable<T> {
+    return this.http.get<T>(this.url(urlSuffix), { params: new HttpParams({ fromObject: params }) });
   }
 
-  post<T>(path: string, body: unknown): Observable<T> {
-    return this.http.post<T>(this.url(path), body);
+  /** POST `body` to `urlSuffix`. */
+  protected post<T>(urlSuffix: string, body: unknown = {}): Observable<T> {
+    return this.http.post<T>(this.url(urlSuffix), body);
   }
 
-  patch<T>(path: string, body: unknown): Observable<T> {
-    return this.http.patch<T>(this.url(path), body);
+  /** PUT `body` to `urlSuffix` (replace the whole record). */
+  protected put<T>(urlSuffix: string, body: unknown = {}): Observable<T> {
+    return this.http.put<T>(this.url(urlSuffix), body);
   }
 
-  delete<T>(path: string): Observable<T> {
-    return this.http.delete<T>(this.url(path));
+  /** PATCH `body` to `urlSuffix` (change some fields). */
+  protected patch<T>(urlSuffix: string, body: unknown = {}): Observable<T> {
+    return this.http.patch<T>(this.url(urlSuffix), body);
   }
 
-  private url(path: string): string {
-    return `${environment.apiBaseUrl}/${path.replace(/^\/+/, '')}`;
+  /** DELETE `urlSuffix`. */
+  protected delete<T>(urlSuffix: string): Observable<T> {
+    return this.http.delete<T>(this.url(urlSuffix));
+  }
+
+  /** Full URL for a path relative to the API root. */
+  private url(urlSuffix: string): string {
+    return `${environment.apiBaseUrl}/${urlSuffix.replace(/^\/+/, '')}`;
   }
 }
 

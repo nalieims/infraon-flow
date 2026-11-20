@@ -227,6 +227,9 @@
           (ngSubmit)="submitAccount()"
           novalidate
         >
+          @if (formError(); as message) {
+            <app-field-error errorId="signup-form-error" alert>{{ message }}</app-field-error>
+          }
           <div class="flex flex-col gap-1.5">
             <label [for]="ids.fullName" class="text-[12px] font-medium text-ink-muted">
               Full name<span class="text-danger" aria-hidden="true"> *</span>
@@ -266,14 +269,10 @@
               [class.border-line]="!errors().email"
               [class.border-danger]="!!errors().email"
               [attr.aria-invalid]="errors().email ? 'true' : null"
-              [attr.aria-describedby]="errors().email ? 'signup-email-error' : 'signup-email-hint'"
+              [attr.aria-describedby]="errors().email ? 'signup-email-error' : null"
             />
             @if (errors().email; as message) {
               <app-field-error errorId="signup-email-error">{{ message }}</app-field-error>
-            } @else {
-              <p id="signup-email-hint" class="text-[12px] text-ink-subtle">
-                We'll send a 6-digit code to confirm it.
-              </p>
             }
           </div>
 
@@ -293,7 +292,7 @@
                 class="field-input pr-11 lg:pr-10"
                 [class.border-line]="!errors().password"
                 [class.border-danger]="!!errors().password"
-                [attr.aria-invalid]="errors().password || passwordPolicyInvalid() ? 'true' : null"
+                [attr.aria-invalid]="errors().password ? 'true' : null"
                 [attr.aria-describedby]="
                   errors().password ? 'signup-password-error' : 'signup-password-hint'
                 "
@@ -384,9 +383,10 @@
 
           <button
             type="submit"
-            class="flex h-12 w-full cursor-pointer items-center justify-center rounded-lg border-[0.667px] border-brand bg-brand px-3.5 text-[15px] font-medium tracking-[-0.075px] text-on-brand shadow-button transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:h-[42px] lg:text-[14px] lg:tracking-[-0.07px]"
+            [disabled]="submitting()"
+            class="flex h-12 w-full cursor-pointer items-center justify-center rounded-lg border-[0.667px] border-brand bg-brand px-3.5 text-[15px] font-medium tracking-[-0.075px] text-on-brand shadow-button transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100 lg:h-[42px] lg:text-[14px] lg:tracking-[-0.07px]"
           >
-            Create account
+            {{ submitLabel() }}
           </button>
         </form>
 
