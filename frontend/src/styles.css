@@ -10,14 +10,13 @@
 
 /*
  * Inter, self-hosted: one variable file covering weights 100-900 (fvar wght axis 100..900).
- * The three other copies in public/fonts are byte-identical, so only this one is declared.
  */
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/inter-400.woff2.woff2') format('woff2');
+  src: url('/fonts/inter-variable.woff2') format('woff2');
 }
 
 /*
@@ -52,7 +51,11 @@
   --color-warn: #f59e0b;
   --color-warn-ink: #b45309;
   --color-on-brand: #ffffff;
-
+  /* App header (Figma Objective Details 1472:809, 1474:1546). */
+  --color-page: #fafafb;
+  --color-brand-line: #c7d2fe;
+  --color-badge: #dc2626;
+  --color-brand-icon: #6366f1;
   --shadow-button: 0 1px 1px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
   --shadow-card: 0 1px 1.5px rgba(16, 24, 40, 0.06), 0 1px 1px rgba(16, 24, 40, 0.04);
 }
@@ -80,10 +83,15 @@
   --color-success-soft: #d1fae5;
   --color-warn: #fbbf24;
   --color-warn-ink: #fcd34d;
+  --color-page: #09090b;
+  --color-brand-line: #4338ca;
+  --color-badge: #ef4444;
+  --color-brand-icon: #818cf8;
   --shadow-card: 0 1px 1.5px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 @layer components {
+
   /* Text input from the sign-up designs: 44px / 16px on phones, 40px / 13px from lg. */
   .field-input {
     @apply h-11 w-full min-w-0 rounded-lg border-[0.667px] bg-surface px-3 py-2 text-base leading-[21.75px] text-ink outline-none placeholder:text-placeholder focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/25 lg:h-10 lg:text-[13px] lg:leading-[18.85px];

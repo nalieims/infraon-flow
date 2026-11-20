@@ -26,14 +26,42 @@ export const routes: Routes = [
     component: MainLayout,
     canActivate: [authGuard],
     children: [
-      { path: 'dashboard', loadChildren: () => import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES) },
-      { path: 'okrs', loadChildren: () => import('./features/okrs/okrs.routes').then((m) => m.OKRS_ROUTES) },
-      { path: 'initiatives', loadChildren: () => import('./features/initiatives/initiatives.routes').then((m) => m.INITIATIVES_ROUTES) },
-      { path: 'tasks', loadChildren: () => import('./features/tasks/tasks.routes').then((m) => m.TASKS_ROUTES) },
-      { path: 'my-day', loadChildren: () => import('./features/my-day/my-day.routes').then((m) => m.MY_DAY_ROUTES) },
-      { path: 'teams', loadChildren: () => import('./features/teams/teams.routes').then((m) => m.TEAMS_ROUTES) },
-      { path: 'reports', loadChildren: () => import('./features/reports/reports.routes').then((m) => m.REPORTS_ROUTES) },
-      { path: 'settings', loadChildren: () => import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES) },
+      {
+        path: 'dashboard',
+        loadChildren: () =>
+          import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES),
+      },
+      {
+        path: 'okrs',
+        loadChildren: () => import('./features/okrs/okrs.routes').then((m) => m.OKRS_ROUTES),
+      },
+      {
+        path: 'initiatives',
+        loadChildren: () =>
+          import('./features/initiatives/initiatives.routes').then((m) => m.INITIATIVES_ROUTES),
+      },
+      {
+        path: 'tasks',
+        loadChildren: () => import('./features/tasks/tasks.routes').then((m) => m.TASKS_ROUTES),
+      },
+      {
+        path: 'my-day',
+        loadChildren: () => import('./features/my-day/my-day.routes').then((m) => m.MY_DAY_ROUTES),
+      },
+      {
+        path: 'teams',
+        loadChildren: () => import('./features/teams/teams.routes').then((m) => m.TEAMS_ROUTES),
+      },
+      {
+        path: 'reports',
+        loadChildren: () =>
+          import('./features/reports/reports.routes').then((m) => m.REPORTS_ROUTES),
+      },
+      {
+        path: 'settings',
+        loadChildren: () =>
+          import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
+      },
     ],
   },
 

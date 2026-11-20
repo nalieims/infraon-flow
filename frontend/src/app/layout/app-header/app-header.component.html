@@ -1,0 +1,252 @@
+<header>
+  <!-- Desktop header (1024 px and up): Figma 1472:912 -->
+  <div
+    class="hidden h-[60px] items-center gap-2 border-b-[0.667px] border-line-soft bg-surface pr-4 pl-6 lg:flex"
+  >
+    <nav aria-label="Breadcrumb" class="min-w-0 shrink">
+      <ol class="flex items-center gap-[2px]">
+        @let crumbs = breadcrumbs();
+        @for (item of crumbs; track item.label; let first = $first) {
+          <li class="flex min-w-0 items-center gap-[2px]">
+            @if (!first) {
+              <span class="relative block size-[10px] shrink-0" aria-hidden="true">
+                <img
+                  src="/icons/app-shell/breadcrumb-chevron.svg"
+                  alt=""
+                  width="4.69"
+                  height="8.44"
+                  class="absolute top-[0.78px] left-[3.28px] block h-[8.44px] w-[4.69px] max-w-none"
+                />
+              </span>
+            }
+            <a
+              [routerLink]="item.link"
+              class="block truncate rounded-[6px] px-[6px] py-1 text-[13px] leading-[18.85px] text-ink-subtle focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
+              >{{ item.label }}</a
+            >
+          </li>
+        }
+      </ol>
+    </nav>
+
+    <div class="min-w-0 flex-1" aria-hidden="true"></div>
+
+    <label class="relative flex w-[326px] min-w-0 shrink items-center pr-[6px]">
+      <span class="sr-only">Search objectives, tasks, people</span>
+      <input
+        #searchInput
+        type="search"
+        autocomplete="off"
+        placeholder="Search objectives, tasks, people"
+        aria-keyshortcuts="Control+K"
+        class="h-9 w-full min-w-0 rounded-lg border-[0.667px] border-line bg-page pr-16 pl-[34px] text-[13px] text-ink outline-none placeholder:text-ink-subtle focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/25 [&::-webkit-search-cancel-button]:appearance-none"
+      />
+      <span
+        class="pointer-events-none absolute top-[11px] left-[11px] block size-[14px]"
+        aria-hidden="true"
+      >
+        <img
+          src="/icons/app-shell/search.svg"
+          alt=""
+          class="absolute inset-[0_-0.01%_0.02%_0] block size-full max-w-none"
+        />
+      </span>
+      <kbd
+        class="pointer-events-none absolute top-2 right-[13.5px] flex h-5 items-center rounded-[4px] border-[0.667px] border-line bg-page px-[6px] font-sans text-[11px] leading-[15.95px] font-medium text-ink-subtle"
+        aria-hidden="true"
+        >Ctrl K</kbd
+      >
+    </label>
+
+    <div class="flex shrink-0 items-start pr-1">
+      <button
+        type="button"
+        class="flex h-[34px] items-center justify-center gap-[6px] rounded-lg border-[0.667px] border-brand-line bg-brand-soft px-[14px] py-[7px] text-center text-[13px] leading-[18.85px] font-medium tracking-[-0.065px] text-brand-strong-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      >
+        <span class="relative block size-[15px] shrink-0" aria-hidden="true">
+          <img
+            src="/icons/app-shell/plus.svg"
+            alt=""
+            class="absolute inset-[9.38%] block size-full max-w-none"
+          />
+        </span>
+        Create
+        <span class="relative block size-[11px] shrink-0" aria-hidden="true">
+          <img
+            src="/icons/create-account/chevron-down.svg"
+            alt=""
+            width="9.28"
+            height="5.16"
+            class="absolute top-[3.61px] left-[0.86px] block h-[5.16px] w-[9.28px] max-w-none"
+          />
+        </span>
+      </button>
+    </div>
+
+    <button
+      type="button"
+      class="relative flex size-8 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent px-[6px] py-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      [attr.aria-label]="notificationsLabel"
+    >
+      <span class="relative block size-4" aria-hidden="true">
+        <img
+          src="/icons/app-shell/bell.svg"
+          alt=""
+          class="absolute inset-[0_6.25%] block size-full max-w-none"
+        />
+      </span>
+      <span
+        class="absolute top-[3px] left-[11.67px] flex h-4 min-w-4 items-center justify-center overflow-clip rounded-full bg-badge px-1 text-center text-[10px] leading-4 font-bold text-on-brand ring-2 ring-surface"
+        aria-hidden="true"
+        >{{ unreadCount }}</span
+      >
+    </button>
+
+    <button
+      type="button"
+      class="relative flex size-8 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent px-[6px] py-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      aria-label="Help"
+    >
+      <span class="relative block size-4" aria-hidden="true">
+        <img
+          src="/icons/app-shell/help.svg"
+          alt=""
+          class="absolute inset-0 block size-full max-w-none"
+        />
+      </span>
+    </button>
+
+    <div class="flex shrink-0 items-start pl-[6px]">
+      <button
+        type="button"
+        class="grid size-7 place-items-center rounded-full bg-linear-135 from-brand-soft to-surface-tint text-[11px] leading-[15.95px] font-semibold text-brand-strong-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        aria-label="Account menu"
+      >
+        {{ userInitials }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Phone and tablet header (below 1024 px): Figma 1474:1554 -->
+  <div
+    class="flex h-14 items-center gap-1 border-b-[0.667px] border-line-soft bg-surface pr-2 pl-1 lg:hidden"
+  >
+    <button
+      type="button"
+      class="relative flex size-8 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent px-[6px] py-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      aria-label="Open menu"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="menuToggle.emit()"
+    >
+      <span class="relative block size-4" aria-hidden="true">
+        <img
+          src="/icons/app-shell/menu.svg"
+          alt=""
+          class="absolute inset-[9.38%_0_9.38%_3.13%] block size-full max-w-none"
+        />
+      </span>
+    </button>
+
+    @let title = pageTitle();
+    <span
+      class="min-w-0 truncate text-[15px] leading-[21.75px] font-semibold tracking-[-0.15px] text-ink"
+      >{{ title }}</span
+    >
+    <div class="min-w-0 flex-1" aria-hidden="true"></div>
+
+    <button
+      type="button"
+      class="relative flex size-8 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent px-[6px] py-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      aria-label="Search"
+    >
+      <span class="relative block size-4" aria-hidden="true">
+        <img
+          src="/icons/app-shell/search.svg"
+          alt=""
+          class="absolute inset-[0_-0.01%_0.02%_0] block size-full max-w-none"
+        />
+      </span>
+    </button>
+
+    <button
+      type="button"
+      class="relative flex size-8 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent bg-brand-soft px-[6px] py-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      aria-label="Create"
+    >
+      <span class="relative block size-4" aria-hidden="true">
+        <img
+          src="/icons/app-shell/plus.svg"
+          alt=""
+          class="absolute inset-[9.38%] block size-[81.25%] max-w-none"
+        />
+      </span>
+    </button>
+
+    <button
+      type="button"
+      class="relative flex size-8 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent px-[6px] py-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      [attr.aria-label]="notificationsLabel"
+    >
+      <span class="relative block size-4" aria-hidden="true">
+        <img
+          src="/icons/app-shell/bell.svg"
+          alt=""
+          class="absolute inset-[0_6.25%] block size-full max-w-none"
+        />
+      </span>
+      <span
+        class="absolute top-[3px] left-[11.67px] flex h-4 min-w-4 items-center justify-center overflow-clip rounded-full bg-badge px-1 text-center text-[10px] leading-4 font-bold text-on-brand ring-2 ring-surface"
+        aria-hidden="true"
+        >{{ unreadCount }}</span
+      >
+    </button>
+
+    <div class="flex shrink-0 items-start pl-[6px]">
+      <button
+        type="button"
+        class="grid size-7 place-items-center rounded-full bg-linear-135 from-brand-soft to-surface-tint text-[11px] leading-[15.95px] font-semibold text-brand-strong-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        aria-label="Account menu"
+      >
+        {{ userInitials }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Phone and tablet tab bar, directly under the top bar (below 1024 px): Figma 1474:2075 -->
+  <nav
+    aria-label="Primary"
+    class="grid h-16 grid-cols-5 border-b-[0.667px] border-line-soft bg-surface pb-1 lg:hidden"
+  >
+    @for (tab of bottomTabs; track tab.path) {
+      <a
+        [routerLink]="tab.path"
+        routerLinkActive
+        #rla="routerLinkActive"
+        ariaCurrentWhenActive="page"
+        class="flex min-w-0 flex-col items-center justify-center gap-1 text-[11px] leading-[15.95px] font-medium focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand"
+        [class.text-brand-strong-ink]="rla.isActive"
+        [class.text-ink-subtle]="!rla.isActive"
+      >
+        <span class="flex size-[18px] items-center justify-center" aria-hidden="true">
+          <span class="icon-mask {{ tab.iconClass }}"></span>
+        </span>
+        <span class="max-w-full truncate">{{ tab.label }}</span>
+      </a>
+    }
+    <!-- "More" opens the menu drawer, like the menu button (Figma 1474:2101) -->
+    <button
+      type="button"
+      class="flex min-w-0 flex-col items-center justify-center gap-1 text-[11px] leading-[15.95px] font-medium text-ink-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand"
+      aria-haspopup="dialog"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="menuToggle.emit()"
+    >
+      <span class="flex size-[18px] items-center justify-center" aria-hidden="true">
+        <span
+          class="icon-mask h-[14.63px] w-[3.37px] [--icon:url(/icons/app-shell/more.svg)]"
+        ></span>
+      </span>
+      More
+    </button>
+  </nav>
+</header>

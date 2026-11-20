@@ -1,0 +1,187 @@
+<!-- Logo row: Figma 1472:814 -->
+<div
+  class="flex h-[60px] shrink-0 items-center gap-2 border-b-[0.667px] border-line-soft"
+  [class.pl-5]="!collapsed()"
+  [class.pr-3]="!collapsed()"
+  [class.justify-center]="collapsed()"
+>
+  @if (!collapsed()) {
+    <img
+      src="/images/infraon-logo.svg"
+      alt="Infraon"
+      width="101"
+      height="18"
+      class="block h-[18px] w-[101px] shrink-0 object-contain object-left"
+    />
+
+    <span
+      class="border-l-[0.667px] border-line pl-2 text-[17px] leading-[18px] font-bold tracking-[-0.34px] text-ink"
+    >
+      Flow
+    </span>
+    <div class="min-w-0 flex-1" aria-hidden="true"></div>
+  }
+  @if (inDrawer()) {
+    <!-- Close button, mobile drawer only: Figma 1474:2678 -->
+    <button
+      type="button"
+      class="flex size-8 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      aria-label="Close menu"
+      (click)="closeRequested.emit()"
+    >
+      <i class="pi pi-times text-[16px] text-ink-subtle" aria-hidden="true"></i>
+    </button>
+  } @else {
+    <button
+      type="button"
+      class="flex size-7 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent px-[6px] py-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      [attr.aria-expanded]="!collapsed()"
+      (click)="collapseToggle.emit()"
+    >
+      <img
+        src="/icons/app-shell/collapse-sidebar.svg"
+        alt=""
+        width="14"
+        height="12"
+        class="block h-[12.25px] w-[14px] max-w-none"
+      />
+    </button>
+  }
+</div>
+
+<!-- Menu: Figma 1472:836 -->
+<nav
+  aria-label="Main"
+  class="flex min-h-0 flex-1 flex-col gap-[2px] overflow-y-auto px-3 pt-1 pb-3"
+>
+  <p
+    [class.sr-only]="collapsed()"
+    class="px-[10px] pt-4 pb-[6px] text-[10.5px] leading-[15.225px] font-semibold tracking-[0.84px] text-ink-subtle uppercase"
+  >
+    Workspace
+  </p>
+
+  @for (link of workspaceLinks; track link.path) {
+    <a
+      [routerLink]="link.path"
+      (click)="closeRequested.emit()"
+      routerLinkActive
+      #rla="routerLinkActive"
+      ariaCurrentWhenActive="page"
+      class="flex h-9 shrink-0 items-center gap-3 rounded-[6px] px-[10px] py-2 text-[13px] leading-[18.85px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      [class.bg-brand-soft]="rla.isActive"
+      [class.text-brand-strong-ink]="rla.isActive"
+      [class.text-ink-muted]="!rla.isActive"
+    >
+      <span class="flex h-4 w-5 shrink-0 items-center justify-center" aria-hidden="true">
+        <span
+          class="icon-mask"
+          [class.text-brand-icon]="rla.isActive"
+          [class.text-ink-subtle]="!rla.isActive"
+          [style.--icon]="'url(' + link.icon + ')'"
+          [style.width.px]="link.iconWidth"
+          [style.height.px]="link.iconHeight"
+        ></span>
+      </span>
+      <span class="min-w-0 flex-1 truncate" [class.sr-only]="collapsed()">{{ link.label }}</span>
+    </a>
+  }
+
+  <p
+    [class.sr-only]="collapsed()"
+    class="px-[10px] pt-4 pb-[6px] text-[10.5px] leading-[15.225px] font-semibold tracking-[0.84px] text-ink-subtle uppercase"
+  >
+    Insights
+  </p>
+
+  <!-- Reports is not available yet ("Soon"), so it is not a link. -->
+  <div
+    class="flex h-9 shrink-0 items-center gap-3 rounded-[6px] px-[10px] py-2 text-[13px] leading-[18.85px] font-medium text-ink-muted"
+    aria-disabled="true"
+  >
+    <span class="flex h-4 w-5 shrink-0 items-center justify-center" aria-hidden="true">
+      <span
+        class="icon-mask h-4 w-3 text-ink-subtle [--icon:url(/icons/app-shell/nav-reports.svg)]"
+      ></span>
+    </span>
+    <span class="min-w-0 flex-1 truncate" [class.sr-only]="collapsed()">Reports</span>
+    <span
+      [class.hidden]="collapsed()"
+      class="flex h-[18px] shrink-0 items-center rounded-full border-[0.667px] border-transparent bg-track px-[7px] text-[10.5px] leading-[10.5px] font-medium text-ink-muted"
+      >Soon</span
+    >
+  </div>
+
+  <a
+    [routerLink]="settingsLink.path"
+    (click)="closeRequested.emit()"
+    routerLinkActive
+    #settingsRla="routerLinkActive"
+    ariaCurrentWhenActive="page"
+    class="flex h-9 shrink-0 items-center gap-3 rounded-[6px] px-[10px] py-2 text-[13px] leading-[18.85px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+    [class.bg-brand-soft]="settingsRla.isActive"
+    [class.text-brand-strong-ink]="settingsRla.isActive"
+    [class.text-ink-muted]="!settingsRla.isActive"
+  >
+    <span class="flex h-4 w-5 shrink-0 items-center justify-center" aria-hidden="true">
+      <span
+        class="icon-mask"
+        [class.text-brand-icon]="settingsRla.isActive"
+        [class.text-ink-subtle]="!settingsRla.isActive"
+        [style.--icon]="'url(' + settingsLink.icon + ')'"
+        [style.width.px]="settingsLink.iconWidth"
+        [style.height.px]="settingsLink.iconHeight"
+      ></span>
+    </span>
+    <span class="min-w-0 flex-1 truncate" [class.sr-only]="collapsed()">{{
+      settingsLink.label
+    }}</span>
+  </a>
+</nav>
+
+<!-- Signed-in user: Figma 1472:895 -->
+<div
+  class="flex shrink-0 items-center gap-[10px] border-t-[0.667px] border-line-soft py-3"
+  [class.pl-4]="!collapsed()"
+  [class.pr-3]="!collapsed()"
+  [class.justify-center]="collapsed()"
+>
+  <span
+    class="grid size-7 shrink-0 place-items-center rounded-full bg-linear-135 from-brand-soft to-surface-tint text-[11px] leading-[15.95px] font-semibold text-brand-strong-ink"
+    aria-hidden="true"
+    >{{ userInitials }}</span
+  >
+  @if (!collapsed()) {
+    <div class="min-w-0 flex-1">
+      <p class="truncate text-[13px] leading-[16.9px] font-semibold text-ink">{{ userName }}</p>
+      <p class="truncate text-[11.5px] leading-[14.95px] text-ink-subtle">{{ userRole }}</p>
+    </div>
+    <button
+      type="button"
+      class="flex size-7 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent px-[6px] py-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      aria-label="Profile settings"
+    >
+      <img
+        src="/icons/app-shell/nav-settings.svg"
+        alt=""
+        width="13"
+        height="14"
+        class="block h-[14px] w-[13.41px] max-w-none"
+      />
+    </button>
+    <button
+      type="button"
+      class="flex size-7 shrink-0 items-center justify-center rounded-lg border-[0.667px] border-transparent px-[6px] py-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      aria-label="Log out"
+    >
+      <img
+        src="/icons/app-shell/log-out.svg"
+        alt=""
+        width="14"
+        height="12"
+        class="block h-[12.25px] w-[14px] max-w-none"
+      />
+    </button>
+  }
+</div>
