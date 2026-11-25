@@ -4,6 +4,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { NEVER, Subject, of, throwError } from 'rxjs';
 
+import { AuthService } from '../../../../../core/auth/auth.service';
+import { LoginResponse } from '../../../../../core/models/auth.model';
 import { RegisterResponse } from '../../models/register.model';
 import { SignupService } from '../../services/signup.service';
 import { SignupPageComponent, quarterLabel } from './signup-page.component';
@@ -36,7 +38,7 @@ describe('SignupPageComponent', () => {
     input('signup-terms').click();
     fixture.detectChanges();
   };
-  // A successful register goes to the login page, so step 2 is opened directly in these tests.
+  // A successful register opens the dashboard, so step 2 is opened directly in these tests.
   const openStep2 = async () => {
     (fixture.componentInstance as unknown as { goToStep(step: 1 | 2): void }).goToStep(2);
     await fixture.whenStable();
@@ -296,12 +298,31 @@ describe('SignupPageComponent', () => {
       expect(register).not.toHaveBeenCalled();
     });
 
-    it('goes to the dashboard after a 201', () => {
+    it('after a 201, logs in with the same email and password, then goes to the dashboard', () => {
+      const loginResponse: LoginResponse = { access: 'access-token', user };
+      const login = vi
+        .spyOn(TestBed.inject(AuthService), 'login')
+        .mockReturnValue(of(loginResponse));
       register.mockReturnValue(of(user));
       fillValid();
       submit();
 
+      expect(login).toHaveBeenCalledWith({
+        email: 'priya.raman@infraonlabs.com',
+        password: 'abcdefghij1!',
+      });
       expect(navigate).toHaveBeenCalledWith(['/dashboard']);
+    });
+
+    it('goes to Sign in when the background login fails after a 201', () => {
+      vi.spyOn(TestBed.inject(AuthService), 'login').mockReturnValue(failWith(401));
+      register.mockReturnValue(of(user));
+      fillValid();
+      submit();
+
+      expect(navigate).toHaveBeenCalledWith(['/login']);
+      expect(navigate).not.toHaveBeenCalledWith(['/dashboard']);
+      expect(formError()).toBeUndefined();
     });
 
     it('shows each 400 field message under its field, focuses the first, and clears it on edit', () => {

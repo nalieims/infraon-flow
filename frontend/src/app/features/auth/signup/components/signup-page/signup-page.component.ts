@@ -19,9 +19,11 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SelectModule } from 'primeng/select';
-import { EMPTY, catchError, map } from 'rxjs';
+import { EMPTY, Observable, catchError, map, switchMap } from 'rxjs';
 
+import { AuthService } from '../../../../../core/auth/auth.service';
 import { ApiErrorResponse } from '../../../../../core/models/api-error.model';
+import { LoginResponse } from '../../../../../core/models/auth.model';
 import { EmailChipsInputComponent } from '../../../../../shared/components/email-chips-input/email-chips-input.component';
 import { FieldErrorComponent } from '../../../../../shared/components/field-error/field-error.component';
 import { workEmailValidator } from '../../../../../shared/utils/email-validators';
@@ -175,7 +177,8 @@ function generalErrorMessage(status: number): string {
 
 /**
  * Two-step sign-up page on one route (/register).
- * Step 1 creates the account with `POST auth/register/` and then opens the dashboard.
+ * Step 1 creates the account with `POST auth/register/`, logs in with `POST auth/login/`,
+ * and then opens the dashboard.
  * Step 2 (workspace setup) only validates in the browser; it is not connected to the API yet.
  */
 @Component({
@@ -197,6 +200,7 @@ export class SignupPageComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
   private readonly signupService = inject(SignupService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   // ----- Static data used by the template -----
@@ -520,7 +524,10 @@ export class SignupPageComponent {
 
   // ----- API call -----
 
-  /** Sends the new account to the API. Success opens the dashboard; failure shows the errors. */
+  /**
+   * Sends the new account to the API, then logs in with it.
+   * Success opens the dashboard; a register failure shows the errors on the form.
+   */
   private readonly registerAccount = (body: RegisterRequest): void => {
     this.serverErrors.set({});
     this.formError.set(null);
@@ -528,6 +535,7 @@ export class SignupPageComponent {
     this.signupService
       .register(body)
       .pipe(
+        switchMap(() => this.signInNewAccount(body)),
         map(() => {
           this.submitting.set(false);
           this.router.navigate(['/dashboard']);
@@ -540,6 +548,20 @@ export class SignupPageComponent {
       )
       .subscribe();
   };
+
+  /**
+   * Logs the new account in, in the background, with the same email and password.
+   * If that fails, the account still exists, so the user is sent to Sign in instead.
+   */
+  private signInNewAccount(body: RegisterRequest): Observable<LoginResponse> {
+    return this.authService.login({ email: body.email, password: body.password }).pipe(
+      catchError(() => {
+        this.submitting.set(false);
+        this.router.navigate(['/login']);
+        return EMPTY;
+      }),
+    );
+  }
 
   /**
    * Shows why registration failed.
