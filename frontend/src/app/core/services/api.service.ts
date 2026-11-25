@@ -5,7 +5,10 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 /** Query string values a GET request can send. */
-export type QueryParams = Record<string, string | number | boolean | readonly (string | number | boolean)[]>;
+export type QueryParams = Record<
+  string,
+  string | number | boolean | readonly (string | number | boolean)[]
+>;
 
 /**
  * Base class for every API service. Each module's service extends it and calls
@@ -19,12 +22,22 @@ export class ApiService {
 
   /** GET `urlSuffix` with optional query params. */
   protected get<T>(urlSuffix: string, params: QueryParams = {}): Observable<T> {
-    return this.http.get<T>(this.url(urlSuffix), { params: new HttpParams({ fromObject: params }) });
+    return this.http.get<T>(this.url(urlSuffix), {
+      params: new HttpParams({ fromObject: params }),
+    });
   }
 
-  /** POST `body` to `urlSuffix`. */
-  protected post<T>(urlSuffix: string, body: unknown = {}): Observable<T> {
-    return this.http.post<T>(this.url(urlSuffix), body);
+  /**
+   * POST `body` to `urlSuffix`.
+   * Pass `{ withCredentials: true }` only for login, refresh and logout: it lets the browser
+   * save and send the `infraon_refresh` cookie.
+   */
+  protected post<T>(
+    urlSuffix: string,
+    body: unknown = {},
+    options: { withCredentials?: boolean } = {},
+  ): Observable<T> {
+    return this.http.post<T>(this.url(urlSuffix), body, options);
   }
 
   /** PUT `body` to `urlSuffix` (replace the whole record). */
