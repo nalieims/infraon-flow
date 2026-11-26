@@ -1,7 +1,10 @@
 """Request and response shapes for /api/v1/auth/ (API Design §6.2)."""
 
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 
 from ..models import User
@@ -85,6 +88,38 @@ class PasswordChangeSerializer(serializers.Serializer):
             raise serializers.ValidationError({"new_password": ["New password must differ from the current one."]})
         if errors := _password_errors(attrs["new_password"], self.context["request"].user):
             raise serializers.ValidationError({"new_password": errors})
+        return attrs
+
+
+# Same message for a bad uid and a bad token, so the link cannot be probed.
+INVALID_RESET_LINK = "This reset link is invalid or has expired. Request a new one."
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField(max_length=64)
+    token = serializers.CharField(max_length=128)
+    new_password = serializers.CharField(
+        write_only=True, trim_whitespace=False, max_length=128, style={"input_type": "password"}
+    )
+
+    def validate(self, attrs: dict) -> dict:
+        try:
+            user_id = force_str(urlsafe_base64_decode(attrs["uid"]))
+            user = User.objects.get(pk=user_id, is_active=True)
+        except (ValueError, TypeError, OverflowError, User.DoesNotExist, DjangoValidationError):
+            raise serializers.ValidationError({"token": [INVALID_RESET_LINK]}) from None
+
+        if not default_token_generator.check_token(user, attrs["token"]):
+            raise serializers.ValidationError({"token": [INVALID_RESET_LINK]})
+
+        if errors := _password_errors(attrs["new_password"], user):
+            raise serializers.ValidationError({"new_password": errors})
+
+        attrs["user"] = user
         return attrs
 
 
