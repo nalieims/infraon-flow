@@ -1,9 +1,14 @@
+import re
+
 from django.contrib.auth import authenticate, get_user_model
+from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase, override_settings
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import DEFAULT_USER_TIMEZONE, validate_timezone
 
@@ -104,3 +109,62 @@ class RegisterApiTests(APITestCase):
 
    
     def test_register_is_throttled(self): ...  # optional: post 3 times, expect 429 on the 3rd
+
+
+RESET_URL = "/api/v1/auth/password/reset/"
+RESET_CONFIRM_URL = "/api/v1/auth/password/reset/confirm/"
+
+
+@override_settings(FRONTEND_URL="http://app.test")
+class PasswordResetApiTests(APITestCase):
+    def setUp(self):
+        cache.clear()  # reset throttle counters between tests
+        self.user = User.objects.create_user(
+            email="reset@example.com", password="Old-strong-password-1", full_name="Reset User"
+        )
+
+    def _request_link(self) -> dict:
+        self.client.post(RESET_URL, {"email": "reset@example.com"}, format="json")
+        match = re.search(r"uid=([\w-]+)&token=([\w-]+)", mail.outbox[-1].body)
+        return {"uid": match[1], "token": match[2]}
+
+    def test_known_email_gets_link(self):
+        res = self.client.post(RESET_URL, {"email": "Reset@Example.com"}, format="json")
+        self.assertEqual(res.status_code, 202)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["reset@example.com"])
+        self.assertIn("http://app.test/reset-password?uid=", mail.outbox[0].body)
+
+    def test_unknown_email_same_answer_no_email(self):
+        res = self.client.post(RESET_URL, {"email": "nobody@example.com"}, format="json")
+        self.assertEqual(res.status_code, 202)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_confirm_sets_password_revokes_sessions_and_link_is_single_use(self):
+        old_session = RefreshToken.for_user(self.user)
+        params = self._request_link()
+
+        res = self.client.post(RESET_CONFIRM_URL, {**params, "new_password": "New-strong-password-2"}, format="json")
+        self.assertEqual(res.status_code, 204)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("New-strong-password-2"))
+        self.assertTrue(BlacklistedToken.objects.filter(token__jti=old_session["jti"]).exists())
+
+        again = self.client.post(RESET_CONFIRM_URL, {**params, "new_password": "Another-strong-pass-3"}, format="json")
+        self.assertEqual(again.status_code, 400)
+        self.assertIn("token", again.data["error"]["details"])
+
+    def test_invalid_link_rejected(self):
+        res = self.client.post(
+            RESET_CONFIRM_URL, {"uid": "bad", "token": "bad", "new_password": "New-strong-password-2"}, format="json"
+        )
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("token", res.data["error"]["details"])
+
+    def test_weak_password_rejected(self):
+        params = self._request_link()
+        res = self.client.post(RESET_CONFIRM_URL, {**params, "new_password": "12345678"}, format="json")
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("new_password", res.data["error"]["details"])
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("Old-strong-password-1"))

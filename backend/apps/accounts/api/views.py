@@ -20,6 +20,8 @@ from .serializers import (
     AccessTokenSerializer,
     LoginResponseSerializer,
     PasswordChangeSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
     RegisterSerializer,
     UserSerializer,
 )
@@ -157,3 +159,42 @@ class PasswordChangeView(APIView):
         response = Response({"access": str(refresh.access_token)})
         set_refresh_cookie(response, str(refresh))
         return response
+
+
+class PasswordResetRequestView(APIView):
+    """Forgot password, step 1: email a reset link. Always 202, whether or not the email has an account."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_password_reset"
+
+    @extend_schema(
+        tags=TAGS,
+        request=PasswordResetRequestSerializer,
+        responses={202: OpenApiResponse(description="A reset link was emailed if the account exists.")},
+    )
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        services.request_password_reset(serializer.validated_data["email"])
+        return Response(
+            {"detail": "If an account exists for this email, we've sent a password reset link."},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    """Forgot password, step 2: set the new password from the emailed link. Signs out every session."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_password_reset_confirm"
+
+    @extend_schema(tags=TAGS, request=PasswordResetConfirmSerializer, responses={204: None})
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        services.change_password(serializer.validated_data["user"], serializer.validated_data["new_password"])
+        return Response(status=status.HTTP_204_NO_CONTENT)

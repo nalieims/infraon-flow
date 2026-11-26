@@ -163,6 +163,8 @@ REST_FRAMEWORK = {
         "auth_login": "5/min",
         "auth_register": "10/hour",
         "auth_password_change": "5/hour",
+        "auth_password_reset": "5/hour",
+        "auth_password_reset_confirm": "10/hour",
     },
 }
 
@@ -231,3 +233,21 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": LOG_LEVEL},
     "loggers": {"django.db.backends": {"level": "WARNING"}},
 }
+
+# ---------------------------------------------------------------------------
+# Email: console in development (emails print to the terminal); SMTP via .env on servers.
+# ---------------------------------------------------------------------------
+EMAIL_BACKEND = env("DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_TIMEOUT = 10  # seconds; a slow mail server must not hang requests
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Infraon Flow <no-reply@localhost>")
+
+# Used to build links in emails (e.g. invitation accept page).
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:4200")
+
+# Forgot-password link lifetime. The link is also single use: it stops working once the password changes.
+PASSWORD_RESET_TIMEOUT = env.int("PASSWORD_RESET_TIMEOUT_MINUTES", default=60) * 60
